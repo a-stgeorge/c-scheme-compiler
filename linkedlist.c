@@ -25,7 +25,7 @@ bool isNull(Value *value) {
 
 }
 
-int lenght(Value *value) {
+int length(Value *value) {
 
 }
 
