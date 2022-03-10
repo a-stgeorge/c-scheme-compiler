@@ -1,38 +1,38 @@
 #include <stdio.h>
 #include <linkedlist.h>
 
-Value *makeNull() {
+Value *makeNull() { // Isaac
 
 }
 
-Value *cons(Value *car, Value *cdr) {
+Value *cons(Value *car, Value *cdr) { // Isaac
 
 }
 
-void display(Value *list) {
+void display(Value *list) { // Isaac
 
 }
 
-Value *car(Value *list) {
+Value *car(Value *list) { // Jon
 
 }
 
-Value *cdr(Value *list) {
+Value *cdr(Value *list) { // Jon
 
 }
 
-bool isNull(Value *value) {
+bool isNull(Value *value) { // Aidan
 
 }
 
-int length(Value *value) {
+int length(Value *value) { // Jon
 
 }
 
-Value *reverse(Value *list) {
+Value *reverse(Value *list) { // Aidan
 
 }
 
-void cleanup(Value *list) {
+void cleanup(Value *list) { // Aidan
 
 }
