@@ -23,5 +23,17 @@ int main(void) {
    printf("Empty? %i\n", isNull(head));
    cleanup(head);
 
+   Value *val3 = malloc(sizeof(Value));
+   val3->type = STR_TYPE;
+   val3->s = "This is a test";
+
+   Value *val4 = malloc(sizeof(Value));
+   val4->type = DOUBLE_TYPE;
+   val4->d = 3.14159;
+
+   display(val2);
+   display(val3);
+   display(cons(val3, val4));
+
    return 0;
 }
