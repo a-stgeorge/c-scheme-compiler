@@ -44,20 +44,30 @@ void display(Value *list) {
 	printf("\n");
 }
 
-Value *car(Value *list) { // Jon
-
+// Returns the first Value in the list represented by the Value passed in.
+// Assumes that the Value passed in is of CONS_TYPE.
+Value *car(Value *list) {
+	return list->c.car;
 }
 
-Value *cdr(Value *list) { // Jon
-
+// Returns a Value representing the rest of the list passed in after the
+// first Value.
+// Assumes that the Value passed in is of CONS_TYPE.
+Value *cdr(Value *list) {
+	return list->c.cdr;
 }
 
 bool isNull(Value *value) { // Aidan
 
 }
 
-int length(Value *value) { // Jon
-
+// Returns the length of the list represented by the Value passed in.
+// Assumes that the Value passed in is of CONS_TYPE.
+int length(Value *value) {
+	int size;
+	for(size = 0; !isNull(value); size++)
+		value = value->c.cdr;
+	return size;
 }
 
 Value *reverse(Value *list) { // Aidan
