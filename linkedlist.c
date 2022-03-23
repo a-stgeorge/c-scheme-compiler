@@ -2,14 +2,24 @@
 #include <stdlib.h>
 #include "linkedlist.h"
 
-Value *makeNull() { // Isaac
+
+// Create an empty linked list
+// It has no input parameters
+// Returns a null list of type NULL_TYPE
+Value *makeNull() {
 	Value *newVal = malloc(sizeof(Value));
 	newVal->type = NULL_TYPE;
 	newVal->s = "NULL";
 	return newVal;
 }
 
-Value *cons(Value *car, Value *cdr) { // Isaac
+// Creates a list of type CONS_TYPE containing
+// the value of car followed by the value of cdr.
+// Values of car and cdr are passed in which eventually
+// make up the list.
+// Returns a list of CONS_TYPE containing values of car
+// and cdr.
+Value *cons(Value *car, Value *cdr) {
 	Value *newVal = malloc(sizeof(Value));
 	newVal->type = CONS_TYPE;
 	newVal->c.car = car;
@@ -17,7 +27,11 @@ Value *cons(Value *car, Value *cdr) { // Isaac
 	return newVal;
 }
 
-void displayHelp(Value *list) { // Isaac
+// Helper method for display.
+// List to be displayed is passed in
+// No values returned, but the values contained
+// in the list are printed.
+void displayHelp(Value *list) {
 	switch(list->type) {
 		case INT_TYPE:
 			printf("%d", list->i);
@@ -39,6 +53,9 @@ void displayHelp(Value *list) { // Isaac
 	}
 }
 
+// Displays the contents of a list
+// A list is passed in which is to be printed.
+// No values are returned.
 void display(Value *list) {
 	displayHelp(list);
 	printf("\n");

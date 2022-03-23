@@ -19,7 +19,7 @@ int main(void) {
    head = cons(val2, head);
 
    display(head);
-   printf("Length = %i\n", length(head));
+   printf("Length = %d\n", length(head));
    printf("Empty? %i\n", isNull(head));
    cleanup(head);
 
