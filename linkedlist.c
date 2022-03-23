@@ -13,6 +13,34 @@ Value *makeNull() {
 	return newVal;
 }
 
+// Helper method that copies one value into a new memory
+// location.
+// Takes in a Value value, and returns the deep copied
+// value.
+Value *copyValue(Value *value) {
+	Value *newVal = malloc(sizeof(Value));
+	newVal->type = value->type;
+	switch (value->type) {
+	case INT_TYPE:
+		newVal->i = value->i;
+		break;
+	case DOUBLE_TYPE:
+		newVal->d = value->d;
+		break;
+	case STR_TYPE:
+		newVal->s = value->s;
+		break;
+	case CONS_TYPE:
+		newVal->c.car = copyValue(value->c.car);
+		newVal->c.cdr = copyValue(value->c.cdr);
+		break;
+	case NULL_TYPE:
+		newVal->s = "NULL";
+		break;
+	}
+	return newVal;
+}
+
 // Creates a list of type CONS_TYPE containing
 // the value of car followed by the value of cdr.
 // Values of car and cdr are passed in which eventually
@@ -43,12 +71,14 @@ void displayHelp(Value *list) {
 			printf("%s", list->s);
 			break;
 		case CONS_TYPE:
+			printf("(");
 			displayHelp(list->c.car);
 			printf(" ");
 			displayHelp(list->c.cdr);
+			printf(")");
 			break;
 		case NULL_TYPE:
-			printf("%s", list->s);
+			printf("%s", "NULL");
 			break;
 	}
 }
@@ -74,8 +104,9 @@ Value *cdr(Value *list) {
 	return list->c.cdr;
 }
 
-bool isNull(Value *value) { // Aidan
-
+// Tests if value is null or not by checking the type of value
+bool isNull(Value *value) {
+	return value->type == NULL_TYPE;
 }
 
 // Returns the length of the list represented by the Value passed in.
@@ -87,10 +118,26 @@ int length(Value *value) {
 	return size;
 }
 
-Value *reverse(Value *list) { // Aidan
-
+// Function that takes in list, a linked list, and returns the list in reverse
+// order as a linked list. The list returned is a full copy (no remaining pointers)
+// of the original input list.
+Value *reverse(Value *list) {
+	if (list->type != CONS_TYPE) {
+		return copyValue(list);
+	}
+	return cons(reverse(cdr(list)), reverse(car(list)));
 }
 
-void cleanup(Value *list) { // Aidan
-
+// Takes in a Value and recursively frees the memory for all the Values
+// stored in the list.
+void cleanup(Value *list) {
+	if (list-> type != CONS_TYPE) {
+		free(list);
+		list = NULL;
+	} else {
+		cleanup(car(list));
+		cleanup(cdr(list));
+		free(list);
+		list = NULL;
+	}
 }
