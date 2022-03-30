@@ -1,43 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "linkedlist.h"
+#include "talloc.h"
 
 
 // Create an empty linked list
 // It has no input parameters
 // Returns a null list of type NULL_TYPE
 Value *makeNull() {
-	Value *newVal = malloc(sizeof(Value));
+	Value *newVal = talloc(sizeof(Value));
 	newVal->type = NULL_TYPE;
 	newVal->s = "NULL";
-	return newVal;
-}
-
-// Helper method that copies one value into a new memory
-// location.
-// Takes in a Value value, and returns the deep copied
-// value.
-Value *copyValue(Value *value) {
-	Value *newVal = malloc(sizeof(Value));
-	newVal->type = value->type;
-	switch (value->type) {
-	case INT_TYPE:
-		newVal->i = value->i;
-		break;
-	case DOUBLE_TYPE:
-		newVal->d = value->d;
-		break;
-	case STR_TYPE:
-		newVal->s = value->s;
-		break;
-	case CONS_TYPE:
-		newVal->c.car = copyValue(value->c.car);
-		newVal->c.cdr = copyValue(value->c.cdr);
-		break;
-	case NULL_TYPE:
-		newVal->s = "NULL";
-		break;
-	}
 	return newVal;
 }
 
@@ -48,7 +22,7 @@ Value *copyValue(Value *value) {
 // Returns a list of CONS_TYPE containing values of car
 // and cdr.
 Value *cons(Value *car, Value *cdr) {
-	Value *newVal = malloc(sizeof(Value));
+	Value *newVal = talloc(sizeof(Value));
 	newVal->type = CONS_TYPE;
 	newVal->c.car = car;
 	newVal->c.cdr = cdr;
@@ -61,6 +35,9 @@ Value *cons(Value *car, Value *cdr) {
 // in the list are printed.
 void displayHelp(Value *list) {
 	switch(list->type) {
+		case PTR_TYPE:
+			printf("%p", list->p);
+			break;
 		case INT_TYPE:
 			printf("%d", list->i);
 			break;
@@ -94,6 +71,7 @@ void display(Value *list) {
 // Returns the first Value in the list represented by the Value passed in.
 // Assumes that the Value passed in is of CONS_TYPE.
 Value *car(Value *list) {
+	assert(list->type == CONS_TYPE);
 	return list->c.car;
 }
 
@@ -101,6 +79,7 @@ Value *car(Value *list) {
 // first Value.
 // Assumes that the Value passed in is of CONS_TYPE.
 Value *cdr(Value *list) {
+	assert(list->type == CONS_TYPE);
 	return list->c.cdr;
 }
 
@@ -113,8 +92,13 @@ bool isNull(Value *value) {
 // Assumes that the Value passed in is of CONS_TYPE.
 int length(Value *value) {
 	int size;
-	for(size = 0; !isNull(value); size++)
+	if (value->type != CONS_TYPE) {
+		return 1;
+	}
+	for(size = 0; !isNull(value); size++) {
+		assert(value->type == CONS_TYPE);
 		value = value->c.cdr;
+	}
 	return size;
 }
 
@@ -123,14 +107,23 @@ int length(Value *value) {
 // of the original input list.
 Value *reverse(Value *list) {
 	if (list->type != CONS_TYPE) {
-		return copyValue(list);
+		return list;
 	}
-	return cons(reverse(cdr(list)), reverse(car(list)));
+
+	Value *cur = list;
+	Value *newList = makeNull();
+	while (!isNull(cur)) {
+		assert(cur->type == CONS_TYPE); // assert valid list
+		newList = cons(car(cur), newList);
+		cur = cdr(cur);
+	}
+
+	return newList;
 }
 
 // Takes in a Value and recursively frees the memory for all the Values
 // stored in the list.
-void cleanup(Value *list) {
+/*void cleanup(Value *list) {
 	if (list-> type != CONS_TYPE) {
 		free(list);
 		list = NULL;
@@ -140,4 +133,4 @@ void cleanup(Value *list) {
 		free(list);
 		list = NULL;
 	}
-}
+}*/
