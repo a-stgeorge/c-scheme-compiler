@@ -1,2 +1,5 @@
 proj1
 We didn't get any help
+
+proj2
+We got some help from Dr. Yang
