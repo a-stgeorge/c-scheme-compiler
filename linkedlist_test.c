@@ -1,17 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "value.h"
 #include "linkedlist.h"
+#include "talloc.h"
 
 int main(void) {
-	Value *val1 = malloc(sizeof(Value));
+	Value *val1 = talloc(sizeof(Value));
 	val1->type = INT_TYPE;
 	val1->i = 23;
 
-	Value *val2 = malloc(sizeof(Value));
+	Value *val2 = talloc(sizeof(Value));
 	val2->type = STR_TYPE;
-	val2->s = "tofu"; 
+	val2->s = talloc(10 * sizeof(char));
+	strcpy(val2->s, "tofu");
 
 	Value *head = makeNull();
 	head = cons(val1, head);
@@ -24,11 +27,11 @@ int main(void) {
 	printf("Empty? %i\n", isNull(head));
 	printf("IsNull? %i\n", isNull(cdr(cdr(head))));
 
-	Value *val3 = malloc(sizeof(Value));
+	Value *val3 = talloc(sizeof(Value));
 	val3->type = STR_TYPE;
 	val3->s = "This is a test";
 
-	Value *val4 = malloc(sizeof(Value));
+	Value *val4 = talloc(sizeof(Value));
 	val4->type = DOUBLE_TYPE;
 	val4->d = 3.14159;
 
@@ -47,16 +50,17 @@ int main(void) {
 	val2 = makeNull();
 	val2->type = STR_TYPE;
 	val2->s = "tofu";
-	val3 = malloc(sizeof(Value));
+	val3 = talloc(sizeof(Value));
 	val3->type = STR_TYPE;
 	val3->s = "This is a test";
-	val4 = malloc(sizeof(Value));
+	val4 = talloc(sizeof(Value));
 	val4->type = DOUBLE_TYPE;
 	val4->d = 3.14159;
-	Value *list = cons(val1, val2);
-	list = cons(list, val5);
-	list = cons(list, val4);
-	list = cons(list, val3);
+	Value *list = cons(val1, makeNull());
+	list = cons(val2, list);
+	list = cons(val5, list);
+	list = cons(val4, list);
+	list = cons(val3, list);
 	display(list);
 
 	Value *revList = reverse(list);
@@ -64,22 +68,8 @@ int main(void) {
 
 	Value *revVal = reverse(val4);
 	display(revVal);
-
-	// Testing deep copy of reverse
-	cdr(car(car(car(list))))->s = "very long string";
-	display(list);
-	display(revList);
-
 	printf("\n");
 
-	// Test Cleanup - also ran valgrind to double check
-	// Need to be careful not to double free, anything that is already in
-	// a list cannot be in another list
-	cleanup(head);
-	cleanup(consVal);
-	cleanup(list);
-	cleanup(revList);	
-	cleanup(revVal);
-
+	texit(0);
 	return 0;
 }
