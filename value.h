@@ -7,6 +7,10 @@ typedef enum {
    DOUBLE_TYPE,
    STR_TYPE,
    CONS_TYPE,
+   OPEN_TYPE,
+   CLOSE_TYPE,
+   BOOL_TYPE,
+   SYMBOL_TYPE,
    NULL_TYPE
 } valueType;
 
