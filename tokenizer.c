@@ -61,7 +61,40 @@ Value *tokenize() {
  * Takes in a linked list of tokens as input and displays them with one token
  * per line.
  */
-void displayTokens(Value *list);
+void displayTokens(Value *list) {
+	Value *token;
+	while(!isNull(list)) {
+		token = car(list);
+		switch(token->type) {
+			case INT_TYPE:
+				printf("%d:integer\n", token->i);
+				break;
+			case DOUBLE_TYPE:
+				printf("%lf:float\n", token->d);
+				break;
+			case STR_TYPE:
+				printf("%s:string\n", token->s);
+				break;
+            case OPEN_TYPE:
+                printf("%s:open\n", token->s);
+                break;
+            case CLOSE_TYPE:
+                printf("%s:close\n", token->s);
+                break;
+            case BOOL_TYPE:
+                printf("%s:boolean\n", token->s);
+                break;
+            case SYMBOL_TYPE:
+                printf("%s:symbol\n", token->s);
+                break;
+            default:
+				printf("Error: invalid token type\n");
+				return;
+                break;
+		}
+		list = cdr(list);
+	}
+}
 
 
 
