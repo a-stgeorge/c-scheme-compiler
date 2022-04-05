@@ -1,13 +1,13 @@
 #include <stdio.h>
 
-#include "tokenize.h"
+#include "tokenizer.h"
 #include "value.h"
 #include "linkedlist.h"
 #include "talloc.h"
 
 
-bool isWhiteSpace(char c) {
-	return c == " " || c == "\n" || c == "\t" || c == "\r" || c == "\v" || c == "\f";
+static bool isWhiteSpace(char c) {
+	return c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f';
 }
 
 /*
@@ -44,7 +44,7 @@ Value *tokenize() {
 			}
 			
 			charRead = fgetc(stdin);
-			if (!isWhiteSpace()) {
+			if (!isWhiteSpace(charRead)) {
 				printf("Error, %s%c not a bool type", val->s, charRead);
 				texit(1);
 			}	

@@ -3,14 +3,17 @@
 CC = clang
 CFLAGS = -g
 
-SRCS = linkedlist.c talloc_test.c talloc.c
-HDRS = linkedlist.h value.h talloc.h
+SRCS = linkedlist.c main_tokenize.c talloc.c tokenizer.c
+HDRS = linkedlist.h value.h talloc.h tokenizer.h
 OBJS = $(SRCS:.c=.o)
+
+tokenizer: $(OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
 
 linkedlist: $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 
-memtest: linkedlist
+memtest: tokenizer
 	valgrind --leak-check=full --show-leak-kinds=all ./$<
 
 %.o : %.c $(HDRS)
@@ -18,4 +21,4 @@ memtest: linkedlist
 
 clean:
 	rm -f *.o
-	rm -f linkedlist
+	rm -f tokenizer
