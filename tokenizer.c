@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "tokenizer.h"
 #include "value.h"
@@ -8,6 +9,13 @@
 
 static bool isTokenEnder(char c) {
 	return c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f' || c == '(' || c == ')' || c == ';';
+}
+
+static bool isSymbolCharacter(char c) {
+	int charInt = c;
+	return c == '+' || c == '-' || c == '.' || c == '*' || c == '/' || c == '<' || c == '=' || c == '>' || c == '!'
+			|| c == '?' || c == ':' || c == '$' || c == '%' || c == '_' || c == '&' || c == '~' || c == '^'
+			|| (charInt <= 57 && charInt >= 48) || (charInt >= 65 && charInt <= 90) || (charInt >= 97 && charInt <= 122);
 }
 
 static bool isDigit(char c) {
@@ -91,8 +99,25 @@ Value *tokenize() {
 			ungetc(nextChar, stdin);
 			list = cons(val, list);
 		}
-		else if(false) { // TODO: symbol
-			
+		else if(isSymbolCharacter(charRead) || charRead == '\'') { // TODO: symbol
+			Value *val = talloc(sizeof(Value));
+			val->type = SYMBOL_TYPE;
+			char *charString = talloc(2*sizeof(char));
+			charString[0] = charRead;
+			charString[1] = '\0';
+			charRead = fgetc(stdin);
+			while(isSymbolCharacter(charRead)) {
+			    char *newCharString = talloc(sizeof(charString)+sizeof(char));
+				char *tempCharString = talloc(sizeof(char)*2);
+				tempCharString[0] = charRead;
+				tempCharString[1] = '\0';
+				strcpy(newCharString, charString);
+				strcat(newCharString, tempCharString);
+				charString = newCharString;
+				charRead = fgetc(stdin);
+			}
+			val->s = charString;
+			list = cons(val, list);
 		}
 		else if (charRead == '\"') {
 			Value *val = talloc(sizeof(Value));
