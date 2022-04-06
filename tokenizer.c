@@ -129,14 +129,19 @@ Value *tokenize() {
 		else if (charRead == '\"') {
 			Value *val = talloc(sizeof(Value));
 			val->type = STR_TYPE;
+            char *charString = charToStr(charRead);
 			charRead = fgetc(stdin);
 			while(charRead != '\"') {
 				if(charRead == '\\') {
-					fgetc(stdin);
+					charString = catStrChar(charString, charRead);
+					charRead = fgetc(stdin);
 				}
+				charString = catStrChar(charString, charRead);
 				charRead = fgetc(stdin);
 			}
-			// TODO: save string
+			charString = catStrChar(charString, charRead);
+
+			val->s = charString;
 			list = cons(val, list);
 		}
 		else if(charRead == ';') {
