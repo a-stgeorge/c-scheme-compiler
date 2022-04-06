@@ -22,6 +22,21 @@ static bool isDigit(char c) {
 	return c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9';
 }
 
+static char *charToStr(char c) {
+	char *temp = talloc(sizeof(char) * 2);
+	temp[0] = c;
+	temp[1] = '\0';
+	return temp;
+}
+
+static char *catStrChar(char *string, char c) {
+	char *temp = charToStr(c);
+	char *newStr = talloc(sizeof(string) + sizeof(char));
+	newStr = strcpy(newStr, string);
+	newStr = strcat(newStr, temp);
+	return newStr;
+}
+
 /*
  * Reads in code and creates a linked list of tokens based on their type.
  */
@@ -102,18 +117,10 @@ Value *tokenize() {
 		else if(isSymbolCharacter(charRead) || charRead == '\'') { // TODO: symbol
 			Value *val = talloc(sizeof(Value));
 			val->type = SYMBOL_TYPE;
-			char *charString = talloc(2*sizeof(char));
-			charString[0] = charRead;
-			charString[1] = '\0';
+			char *charString = charToStr(charRead);
 			charRead = fgetc(stdin);
 			while(isSymbolCharacter(charRead)) {
-			    char *newCharString = talloc(sizeof(charString)+sizeof(char));
-				char *tempCharString = talloc(sizeof(char)*2);
-				tempCharString[0] = charRead;
-				tempCharString[1] = '\0';
-				strcpy(newCharString, charString);
-				strcat(newCharString, tempCharString);
-				charString = newCharString;
+				charString = catStrChar(charString, charRead);
 				charRead = fgetc(stdin);
 			}
 			val->s = charString;
