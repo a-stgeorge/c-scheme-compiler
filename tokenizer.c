@@ -59,13 +59,60 @@ Value *tokenize() {
 		}
 		else if(isDigit(charRead)) {
 			Value *val = talloc(sizeof(Value));
-			int tempInt = charRead - 48;
+			double tempNum = charRead - 48;
+			val->type = INT_TYPE;
 
 			char nextChar = fgetc(stdin);
 			while(isDigit(nextChar)) {
-				tempInt *= 10;
-				tempInt += (nextChar - 48);
-			}	
+				tempNum *= 10;
+				tempNum += (nextChar - 48);
+				nextChar = fgetc(stdin);
+			}
+
+			if(nextChar == '.') {
+				val->type = DOUBLE_TYPE;
+				nextChar = fgetc(stdin);
+
+				double dec = 1;
+				while(isDigit(nextChar)) {
+        	        dec /= 10;
+    	            tempNum += (nextChar - 48)*dec;
+	                nextChar = fgetc(stdin);
+            	}
+				val->d = tempNum;
+			}
+			else{
+				val->i = tempNum;
+			}
+			if (!isTokenEnder(nextChar)) {
+				printf("Error, not a number");
+				texit(1);
+			}
+			ungetc(nextChar, stdin);
+			list = cons(val, list);
+		}
+		else if(false) { // TODO: symbol
+			
+		}
+		else if (charRead == '\"') {
+			Value *val = talloc(sizeof(Value));
+			val->type = STR_TYPE;
+			charRead = fgetc(stdin);
+			while(charRead != '\"') {
+				if(charRead == '\\') {
+					fgetc(stdin);
+				}
+				charRead = fgetc(stdin);
+			}
+			// TODO: save string
+			list = cons(val, list);
+		}
+		else if(charRead == ';') {
+			while(fgetc(stdin) != '\n');
+		}
+		else if(isTokenEnder(charRead));
+		else {
+			printf("Error, %c is not a valid character to start a token\n", charRead);
 		}
 		charRead = fgetc(stdin);
 	}

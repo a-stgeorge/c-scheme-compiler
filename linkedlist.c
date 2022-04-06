@@ -57,6 +57,8 @@ void displayHelp(Value *list) {
 		case NULL_TYPE:
 			printf("%s", "NULL");
 			break;
+		default:
+			printf("%s", list->s);
 	}
 }
 
