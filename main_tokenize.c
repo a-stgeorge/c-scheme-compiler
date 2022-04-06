@@ -1,5 +1,9 @@
+#include "talloc.h"
+#include "linkedlist.h"
+#include "tokenizer.h"
+
 int main(void) {
-	value *list = tokenize();
+	Value *list = tokenize();
 	displayTokens(list);
 	tfree();
 	return 0;
