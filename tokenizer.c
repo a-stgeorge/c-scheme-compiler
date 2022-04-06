@@ -113,6 +113,8 @@ Value *tokenize() {
 		else if(isTokenEnder(charRead));
 		else {
 			printf("Error, %c is not a valid character to start a token\n", charRead);
+			//TODO: uncomment the next line when ready
+			//texit(1);
 		}
 		charRead = fgetc(stdin);
 	}
