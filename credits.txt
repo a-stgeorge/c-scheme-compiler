@@ -3,3 +3,6 @@ We didn't get any help.
 
 proj2
 We got some help from Dr. Yang.
+
+proj3
+We got some help from Dr. Yang in class (asking questions).

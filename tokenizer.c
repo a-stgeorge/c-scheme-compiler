@@ -40,6 +40,39 @@ static char *catStrChar(char *string, char c) {
 	return newStr;
 }
 
+static void constructNumber(Value *val, char nextChar) {
+	double tempNum = nextChar - 48;
+    val->type = INT_TYPE;
+
+    nextChar = fgetc(stdin);
+    while(isDigit(nextChar)) {
+        tempNum *= 10;
+        tempNum += (nextChar - 48);
+        nextChar = fgetc(stdin);
+    }
+
+    if(nextChar == '.') {
+        val->type = DOUBLE_TYPE;
+        nextChar = fgetc(stdin);
+
+    	double dec = 1;
+        while(isDigit(nextChar)) {
+            dec /= 10;
+            tempNum += (nextChar - 48)*dec;
+            nextChar = fgetc(stdin);
+        }
+        val->d = tempNum;
+    }
+    else{
+        val->i = tempNum;
+    }
+    if (!isTokenEnder(nextChar)) {
+        printf("Error, not a number");
+        texit(1);
+    }
+    ungetc(nextChar, stdin);
+}
+
 /*
  * Reads in code and creates a linked list of tokens based on their type.
  */
@@ -82,38 +115,62 @@ Value *tokenize() {
 			
 			list = cons(val, list);	
 
+		} else if (charRead == '+' || charRead == '-') {
+			Value *val = talloc(sizeof(Value));
+			char sign = charRead;
+			charRead = fgetc(stdin);
+			if (isTokenEnder(charRead)) {
+				val->type = SYMBOL_TYPE;
+				val->s = charToStr(sign);
+			}
+			else {
+				constructNumber(val, charRead);
+				if(sign == '-' && val->type == INT_TYPE) {
+					val->i *= -1;
+				} else if (sign == '-') {
+					val->d *= -1;
+				}
+			}
+			list = cons(val, list);
+		} else if (charRead == '.') {
+			ungetc(charRead, stdin);
+			charRead = '0';
+			Value *val = talloc(sizeof(Value));
+			constructNumber(val, charRead);
+			list = cons(val, list);
 		} else if (isDigit(charRead)) { // Number Types
 			Value *val = talloc(sizeof(Value));
-			double tempNum = charRead - 48;
-			val->type = INT_TYPE;
-
-			char nextChar = fgetc(stdin);
-			while(isDigit(nextChar)) {
-				tempNum *= 10;
-				tempNum += (nextChar - 48);
-				nextChar = fgetc(stdin);
-			}
-
-			if(nextChar == '.') {
-				val->type = DOUBLE_TYPE;
-				nextChar = fgetc(stdin);
-
-				double dec = 1;
-				while(isDigit(nextChar)) {
-        	        dec /= 10;
-    	            tempNum += (nextChar - 48)*dec;
-	                nextChar = fgetc(stdin);
-            	}
-				val->d = tempNum;
-			}
-			else{
-				val->i = tempNum;
-			}
-			if (!isTokenEnder(nextChar)) {
-				printf("Error, not a number");
-				texit(1);
-			}
-			ungetc(nextChar, stdin);
+			constructNumber(val, charRead);
+//			double tempNum = charRead - 48;
+//			val->type = INT_TYPE;
+//
+//			char nextChar = fgetc(stdin);
+//			while(isDigit(nextChar)) {
+//				tempNum *= 10;
+//				tempNum += (nextChar - 48);
+//				nextChar = fgetc(stdin);
+//			}
+//
+//			if(nextChar == '.') {
+//				val->type = DOUBLE_TYPE;
+//				nextChar = fgetc(stdin);
+//
+//				double dec = 1;
+//				while(isDigit(nextChar)) {
+//        	        dec /= 10;
+//    	            tempNum += (nextChar - 48)*dec;
+//	                nextChar = fgetc(stdin);
+//            	}
+//				val->d = tempNum;
+//			}
+//			else{
+//				val->i = tempNum;
+//			}
+//			if (!isTokenEnder(nextChar)) {
+//				printf("Error, not a number");
+//				texit(1);
+//			}
+//			ungetc(nextChar, stdin);
 			list = cons(val, list);
 
 		} else if (isSymbolCharacter(charRead) || charRead == '\'') { // Symbol Type
