@@ -8,18 +8,21 @@
 
 
 static bool isTokenEnder(char c) {
-	return c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f' || c == '(' || c == ')' || c == ';' || c == EOF;
+	return c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f' 
+			|| c == '(' || c == ')' || c == ';' || c == EOF;
 }
 
 static bool isSymbolCharacter(char c) {
 	int charInt = c;
-	return c == '+' || c == '-' || c == '.' || c == '*' || c == '/' || c == '<' || c == '=' || c == '>' || c == '!'
-			|| c == '?' || c == ':' || c == '$' || c == '%' || c == '_' || c == '&' || c == '~' || c == '^'
-			|| (charInt <= 57 && charInt >= 48) || (charInt >= 65 && charInt <= 90) || (charInt >= 97 && charInt <= 122);
+	return c == '+' || c == '-' || c == '.' || c == '*' || c == '/' || c == '<' || c == '=' 
+			|| c == '>' || c == '!' || c == '?' || c == ':' || c == '$' || c == '%' || c == '_' 
+			|| c == '&' || c == '~' || c == '^' || (charInt <= 57 && charInt >= 48) 
+			|| (charInt >= 65 && charInt <= 90) || (charInt >= 97 && charInt <= 122);
 }
 
 static bool isDigit(char c) {
-	return c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9';
+	return c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' 
+			|| c == '7' || c == '8' || c == '9';
 }
 
 static char *charToStr(char c) {
@@ -31,7 +34,7 @@ static char *charToStr(char c) {
 
 static char *catStrChar(char *string, char c) {
 	char *temp = charToStr(c);
-	char *newStr = talloc(sizeof(string) + sizeof(char));
+	char *newStr = talloc(strlen(string) + 2*sizeof(char));
 	newStr = strcpy(newStr, string);
 	newStr = strcat(newStr, temp);
 	return newStr;
@@ -46,17 +49,17 @@ Value *tokenize() {
 	Value *list = makeNull();
 	charRead = fgetc(stdin);
 	while (charRead != EOF) {
-		if (charRead == '(') {
+		if (charRead == '(') { // Open Type
 			Value *val = talloc(sizeof(Value));
 			val->type = OPEN_TYPE;
 			val->s = "(";
 			list = cons(val, list);	
-		} else if (charRead == ')') {
+		} else if (charRead == ')') { // Close Type
 			Value *val = talloc(sizeof(Value));
 			val->type = CLOSE_TYPE;
 			val->s = ")";
 			list = cons(val, list);	
-		} else if (charRead == '#') {
+		} else if (charRead == '#') { // Boolean Type
 			Value *val = talloc(sizeof(Value));
 			val->type = BOOL_TYPE;
 
@@ -79,8 +82,7 @@ Value *tokenize() {
 			
 			list = cons(val, list);	
 
-		}
-		else if(isDigit(charRead)) {
+		} else if (isDigit(charRead)) { // Number Types
 			Value *val = talloc(sizeof(Value));
 			double tempNum = charRead - 48;
 			val->type = INT_TYPE;
@@ -113,8 +115,8 @@ Value *tokenize() {
 			}
 			ungetc(nextChar, stdin);
 			list = cons(val, list);
-		}
-		else if(isSymbolCharacter(charRead) || charRead == '\'') {
+
+		} else if (isSymbolCharacter(charRead) || charRead == '\'') { // Symbol Type
 			Value *val = talloc(sizeof(Value));
 			val->type = SYMBOL_TYPE;
 			char *charString = charToStr(charRead);
@@ -131,8 +133,7 @@ Value *tokenize() {
 			ungetc(charRead, stdin);
 			val->s = charString;
 			list = cons(val, list);
-		}
-		else if (charRead == '\"') {
+		} else if (charRead == '\"') { // String Type
 			Value *val = talloc(sizeof(Value));
 			val->type = STR_TYPE;
             char *charString = charToStr(charRead);
@@ -153,15 +154,16 @@ Value *tokenize() {
 
 			val->s = charString;
 			list = cons(val, list);
-		}
-		else if(charRead == ';') {
+		} else if(charRead == ';') { // Comments
 			charRead = fgetc(stdin);
 			while(charRead != '\n' && charRead != EOF) {
 				charRead = fgetc(stdin);
 			}
 			ungetc(charRead, stdin);
 		}
-		else if(isTokenEnder(charRead));
+		else if(isTokenEnder(charRead)) {
+			// No action needed, whitespace
+		}
 		else {
 			printf("Error, %c is not a valid character to start a token\n", charRead);
 			texit(1);
