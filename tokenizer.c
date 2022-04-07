@@ -141,36 +141,6 @@ Value *tokenize() {
 		} else if (isDigit(charRead)) { // Number Types
 			Value *val = talloc(sizeof(Value));
 			constructNumber(val, charRead);
-//			double tempNum = charRead - 48;
-//			val->type = INT_TYPE;
-//
-//			char nextChar = fgetc(stdin);
-//			while(isDigit(nextChar)) {
-//				tempNum *= 10;
-//				tempNum += (nextChar - 48);
-//				nextChar = fgetc(stdin);
-//			}
-//
-//			if(nextChar == '.') {
-//				val->type = DOUBLE_TYPE;
-//				nextChar = fgetc(stdin);
-//
-//				double dec = 1;
-//				while(isDigit(nextChar)) {
-//        	        dec /= 10;
-//    	            tempNum += (nextChar - 48)*dec;
-//	                nextChar = fgetc(stdin);
-//            	}
-//				val->d = tempNum;
-//			}
-//			else{
-//				val->i = tempNum;
-//			}
-//			if (!isTokenEnder(nextChar)) {
-//				printf("Error, not a number");
-//				texit(1);
-//			}
-//			ungetc(nextChar, stdin);
 			list = cons(val, list);
 
 		} else if (isSymbolCharacter(charRead) || charRead == '\'') { // Symbol Type
