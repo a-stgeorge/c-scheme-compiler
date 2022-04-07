@@ -8,7 +8,7 @@
 
 
 static bool isTokenEnder(char c) {
-	return c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f' || c == '(' || c == ')' || c == ';';
+	return c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f' || c == '(' || c == ')' || c == ';' || c == EOF;
 }
 
 static bool isSymbolCharacter(char c) {
@@ -114,7 +114,7 @@ Value *tokenize() {
 			ungetc(nextChar, stdin);
 			list = cons(val, list);
 		}
-		else if(isSymbolCharacter(charRead) || charRead == '\'') { // TODO: symbol
+		else if(isSymbolCharacter(charRead) || charRead == '\'') {
 			Value *val = talloc(sizeof(Value));
 			val->type = SYMBOL_TYPE;
 			char *charString = charToStr(charRead);
@@ -123,6 +123,12 @@ Value *tokenize() {
 				charString = catStrChar(charString, charRead);
 				charRead = fgetc(stdin);
 			}
+
+			if (!isTokenEnder(charRead)) {
+                printf("Error, %c is not a valid symbol character\n", charRead);
+                texit(1);
+            }
+			ungetc(charRead, stdin);
 			val->s = charString;
 			list = cons(val, list);
 		}
@@ -132,6 +138,10 @@ Value *tokenize() {
             char *charString = charToStr(charRead);
 			charRead = fgetc(stdin);
 			while(charRead != '\"') {
+				if(charRead == EOF) {
+					printf("Error, unterminated string");
+					texit(1);
+				}
 				if(charRead == '\\') {
 					charString = catStrChar(charString, charRead);
 					charRead = fgetc(stdin);
@@ -145,13 +155,16 @@ Value *tokenize() {
 			list = cons(val, list);
 		}
 		else if(charRead == ';') {
-			while(fgetc(stdin) != '\n');
+			charRead = fgetc(stdin);
+			while(charRead != '\n' && charRead != EOF) {
+				charRead = fgetc(stdin);
+			}
+			ungetc(charRead, stdin);
 		}
 		else if(isTokenEnder(charRead));
 		else {
 			printf("Error, %c is not a valid character to start a token\n", charRead);
-			//TODO: uncomment the next line when ready
-			//texit(1);
+			texit(1);
 		}
 		charRead = fgetc(stdin);
 	}
