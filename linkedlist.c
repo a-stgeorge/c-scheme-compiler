@@ -93,7 +93,7 @@ bool isNull(Value *value) {
 // Returns the length of the list represented by the Value passed in.
 // Assumes that the Value passed in is of CONS_TYPE.
 int length(Value *value) {
-	int size;
+	int size = 0;
 	if (value->type != CONS_TYPE) {
 		return 1;
 	}

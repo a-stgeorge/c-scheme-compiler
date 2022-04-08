@@ -237,7 +237,6 @@ void displayTokens(Value *list) {
 		}
 		list = cdr(list);
 	}
-	tfree();
 }
 
 
