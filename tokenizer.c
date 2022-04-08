@@ -124,6 +124,16 @@ Value *tokenize() {
 				val->s = charToStr(sign);
 			}
 			else {
+				if(charRead == '.') {
+					charRead = fgetc(stdin);
+					if (isTokenEnder(charRead)) {
+                		printf("Error, %c. is not a valid token", sign);
+                		texit(1);
+            		}
+        	    	ungetc(charRead, stdin);
+    	        	ungetc('.', stdin);
+	            	charRead = '0';
+				}
 				constructNumber(val, charRead);
 				if(sign == '-' && val->type == INT_TYPE) {
 					val->i *= -1;
@@ -133,7 +143,13 @@ Value *tokenize() {
 			}
 			list = cons(val, list);
 		} else if (charRead == '.') {
+			charRead = fgetc(stdin);
+			if (isTokenEnder(charRead)) {
+				printf("Error, . is not a valid token");
+				texit(1);
+			}
 			ungetc(charRead, stdin);
+			ungetc('.', stdin);
 			charRead = '0';
 			Value *val = talloc(sizeof(Value));
 			constructNumber(val, charRead);
