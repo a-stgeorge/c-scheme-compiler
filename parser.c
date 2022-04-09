@@ -1,3 +1,8 @@
+// Parses scheme code into a parse tree from an ordered list of tokens
+// Authors: Jon, Isaac, Aidan
+
+#include "parser.h"
+
 Value *parse(Value *tokens) {
 	Value *stack = makeNull();
 	int depth = 0;
@@ -17,7 +22,7 @@ Value *parse(Value *tokens) {
 			Value *cur = car(stack);
 			Value *popped = makeNull();
 			stack = cdr(stack);
-			while(cur != OPEN_TYPE) { //TODO: check for null, proper number of open/close parens
+			while(cur->type != OPEN_TYPE) { //TODO: check for null, proper number of open/close parens
 				popped = cons(cur, popped);
 				cur = car(stack);
 				stack = cdr(stack);

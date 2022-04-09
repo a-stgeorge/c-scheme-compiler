@@ -2,9 +2,6 @@
 #include <string.h>
 
 #include "tokenizer.h"
-#include "value.h"
-#include "linkedlist.h"
-#include "talloc.h"
 
 
 static bool isTokenEnder(char c) {
