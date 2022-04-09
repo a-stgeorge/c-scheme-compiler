@@ -16,8 +16,8 @@ static bool isSymbolCharacter(char c) {
 	int charInt = c;
 	return c == '+' || c == '-' || c == '.' || c == '*' || c == '/' || c == '<' || c == '=' 
 			|| c == '>' || c == '!' || c == '?' || c == ':' || c == '$' || c == '%' || c == '_' 
-			|| c == '&' || c == '~' || c == '^' || (charInt <= 57 && charInt >= 48) 
-			|| (charInt >= 65 && charInt <= 90) || (charInt >= 97 && charInt <= 122);
+			|| c == '&' || c == '~' || c == '^' || (charInt >= '0' && charInt <= '9') 
+			|| (charInt >= 'A' && charInt <= 'Z') || (charInt >= 'a' && charInt <= 'z');
 }
 
 static bool isDigit(char c) {
@@ -41,13 +41,13 @@ static char *catStrChar(char *string, char c) {
 }
 
 static void constructNumber(Value *val, char nextChar) {
-	double tempNum = nextChar - 48;
+	double tempNum = nextChar - '0';
     val->type = INT_TYPE;
 
     nextChar = fgetc(stdin);
     while(isDigit(nextChar)) {
         tempNum *= 10;
-        tempNum += (nextChar - 48);
+        tempNum += (nextChar - '0');
         nextChar = fgetc(stdin);
     }
 
@@ -58,7 +58,7 @@ static void constructNumber(Value *val, char nextChar) {
     	double dec = 1;
         while(isDigit(nextChar)) {
             dec /= 10;
-            tempNum += (nextChar - 48)*dec;
+            tempNum += (nextChar - '0')*dec;
             nextChar = fgetc(stdin);
         }
         val->d = tempNum;
@@ -254,7 +254,3 @@ void displayTokens(Value *list) {
 		list = cdr(list);
 	}
 }
-
-
-
-
