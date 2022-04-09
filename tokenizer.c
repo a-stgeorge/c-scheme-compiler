@@ -70,7 +70,33 @@ static void constructNumber(Value *val, char nextChar) {
     ungetc(nextChar, stdin);
 }
 
+// PARSE BOOLEANS
+static Value *parseBoolean() {
+	Value *val = talloc(sizeof(Value));
+	val->type = BOOL_TYPE;
+
+	char charRead = fgetc(stdin);
+	if (charRead == 't') {
+		val->s = "#t";
+	} else if (charRead == 'f') {
+		val->s = "#f";
+	} else {
+		printf("Error, #%c not a bool type", charRead);
+		texit(1);
+	}
+		
+	charRead = fgetc(stdin);
+	if (!isTokenEnder(charRead)) {
+		printf("Error, %s%c not a bool type", val->s, charRead);
+		texit(1);
+	}
+	ungetc(charRead, stdin);
+
+	return val;
+}
+
 /*
+ * MAIN TOKENIZE FUNCTION 
  * Reads in code and creates a linked list of tokens based on their type.
  */
 Value *tokenize() {
@@ -90,28 +116,8 @@ Value *tokenize() {
 			val->s = ")";
 			list = cons(val, list);	
 		} else if (charRead == '#') { // Boolean Type
-			Value *val = talloc(sizeof(Value));
-			val->type = BOOL_TYPE;
-
-			charRead = fgetc(stdin);
-			if (charRead == 't') {
-				val->s = "#t";
-			} else if (charRead == 'f') {
-				val->s = "#f";
-			} else {
-				printf("Error, #%c not a bool type", charRead);
-				texit(1);
-			}
-			
-			charRead = fgetc(stdin);
-			if (!isTokenEnder(charRead)) {
-				printf("Error, %s%c not a bool type", val->s, charRead);
-				texit(1);
-			}
-			ungetc(charRead, stdin);
-			
+			Value *val = parseBoolean()			
 			list = cons(val, list);	
-
 		} else if (charRead == '+' || charRead == '-') {
 			Value *val = talloc(sizeof(Value));
 			char sign = charRead;
