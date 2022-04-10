@@ -7,7 +7,7 @@ if:symbol
 (:open
 -:symbol
 0.320000:float
--30.320000:float
+-0.320000:float
 ):close
 ):close
 (:open
@@ -27,5 +27,5 @@ if:symbol
 (:open
 define:symbol
 string1:symbol
-"This is a string! \n\n\tWith special characters! - \\ and \\\"":string
+"This is a string! \n\n\tWith special characters! - \\ and \\\"\n;;And this is a comment in a string!":string
 ):close

@@ -7,7 +7,7 @@ x2:symbol
 quote:symbol
 (:open
 x:symbol
--20.200000:float
+-0.200000:float
 0.720000:float
 ):close
 ):close

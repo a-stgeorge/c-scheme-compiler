@@ -183,7 +183,7 @@ Value *tokenize() {
             		}
         	    	ungetc(charRead, stdin);
     	        	ungetc('.', stdin);
-	            	ungetc('0', stdin);
+	            	charRead = '0';
 				}
 				val = parseNumber(charRead);
 				if (sign == '-' && val->type == INT_TYPE) {
