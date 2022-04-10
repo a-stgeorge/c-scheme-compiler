@@ -11,7 +11,8 @@ x:symbol
 0.720000:float
 ):close
 ):close
-"foo;; \"\n still a string":string
+"foo;; "
+ still a string":string
 -23:integer
 ):close
 186.270000:float

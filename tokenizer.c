@@ -130,8 +130,22 @@ static Value *parseString(char charRead) {
 			printf("Error, unterminated string");
 			texit(1);
 		} else if (charRead == '\\') {
-			charString = catStrChar(charString, charRead);
 			charRead = fgetc(stdin);
+			switch (charRead) {
+				case 'n':
+					charRead = '\n';
+					break;
+				case 't':
+					charRead = '\t';
+					break;
+				case '\'':
+				case '"':
+				case '\\':
+					break;
+				default: // only so many valid escape sequences
+					printf("Invalid escape sequence: \\%c", charRead);
+					texit(1);
+			}
 		}
 		charString = catStrChar(charString, charRead);
 		charRead = fgetc(stdin);

@@ -27,5 +27,8 @@ if:symbol
 (:open
 define:symbol
 string1:symbol
-"This is a string! \n\n\tWith special characters! - \\ and \\\"\n;;And this is a comment in a string!":string
+"This is a string! 
+
+	With special characters! - \, ', and "
+;;And this is a comment in a string!":string
 ):close

@@ -3,4 +3,4 @@
 (and (if #t #f (- 0.32 -.32))
 	 (if > (+ (+ 3314314 +0.4) -44444)))
 
-(define string1 "This is a string! \n\n\tWith special characters! - \\ and \\\"\n;;And this is a comment in a string!")
+(define string1 "This is a string! \n\n\tWith special characters! - \\, \', and \"\n;;And this is a comment in a string!")
