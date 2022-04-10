@@ -10,12 +10,6 @@ OBJS = $(SRCS:.c=.o)
 parser: $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 
-tokenizer: $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
-
-linkedlist: $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
-
 memtest: parser
 	valgrind --leak-check=full --show-leak-kinds=all ./$<
 

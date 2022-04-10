@@ -3,7 +3,7 @@
 
 #include "tokenizer.h"
 
-
+// HELPER FUNCTIONS
 static bool isTokenEnder(char c) {
 	return c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f' 
 			|| c == '(' || c == ')' || c == ';' || c == EOF;
@@ -37,42 +37,45 @@ static char *catStrChar(char *string, char c) {
 	return newStr;
 }
 
-static void constructNumber(Value *val, char nextChar) {
+// PARSE NUMBERS
+static Value *parseNumber(char nextChar) {
+	Value *val = makeNull();
 	double tempNum = nextChar - '0';
     val->type = INT_TYPE;
 
     nextChar = fgetc(stdin);
-    while(isDigit(nextChar)) {
+    while (isDigit(nextChar)) {
         tempNum *= 10;
         tempNum += (nextChar - '0');
         nextChar = fgetc(stdin);
     }
 
-    if(nextChar == '.') {
+    if (nextChar == '.') {
         val->type = DOUBLE_TYPE;
         nextChar = fgetc(stdin);
 
     	double dec = 1;
-        while(isDigit(nextChar)) {
+        while (isDigit(nextChar)) {
             dec /= 10;
             tempNum += (nextChar - '0')*dec;
             nextChar = fgetc(stdin);
         }
+
         val->d = tempNum;
-    }
-    else{
+    } else{
         val->i = tempNum;
-    }
-    if (!isTokenEnder(nextChar)) {
+    } if (!isTokenEnder(nextChar)) {
         printf("Error, not a number");
         texit(1);
     }
     ungetc(nextChar, stdin);
+
+	return val;
 }
 
 // PARSE BOOLEANS
 static Value *parseBoolean() {
-	Value *val = talloc(sizeof(Value));
+	Value *val = makeNull();
 	val->type = BOOL_TYPE;
 
 	char charRead = fgetc(stdin);
@@ -95,39 +98,84 @@ static Value *parseBoolean() {
 	return val;
 }
 
+// PARSE SYMBOLS
+static Value *parseSymbol(char charRead) {
+	Value *val = makeNull();
+	val->type = SYMBOL_TYPE;
+	char *charString = charToStr(charRead);
+	charRead = fgetc(stdin);
+	while (isSymbolCharacter(charRead)) {
+		charString = catStrChar(charString, charRead);
+		charRead = fgetc(stdin);
+	}
+
+	if (!isTokenEnder(charRead)) {
+		printf("Error, %c is not a valid symbol character\n", charRead);
+		texit(1);
+    }
+	ungetc(charRead, stdin);
+	val->s = charString;
+
+	return val;
+}
+
+// PARSE STRINGS
+static Value *parseString(char charRead) {
+	Value *val = makeNull();
+	val->type = STR_TYPE;
+	char *charString = charToStr(charRead);
+	charRead = fgetc(stdin);
+	while(charRead != '\"') {
+		if (charRead == EOF) {
+			printf("Error, unterminated string");
+			texit(1);
+		} else if (charRead == '\\') {
+			charString = catStrChar(charString, charRead);
+			charRead = fgetc(stdin);
+		}
+		charString = catStrChar(charString, charRead);
+		charRead = fgetc(stdin);
+	}
+	charString = catStrChar(charString, charRead);
+
+	val->s = charString;
+	return val;
+}
+
 /*
  * MAIN TOKENIZE FUNCTION 
  * Reads in code and creates a linked list of tokens based on their type.
  */
-Value *tokenize() {
-	
+Value *tokenize() {	
 	char charRead;
 	Value *list = makeNull();
+
 	charRead = fgetc(stdin);
 	while (charRead != EOF) {
 		if (charRead == '(') { // Open Type
-			Value *val = talloc(sizeof(Value));
+			Value *val = makeNull();
 			val->type = OPEN_TYPE;
 			val->s = "(";
 			list = cons(val, list);	
 		} else if (charRead == ')') { // Close Type
-			Value *val = talloc(sizeof(Value));
+			Value *val = makeNull();
 			val->type = CLOSE_TYPE;
 			val->s = ")";
 			list = cons(val, list);	
 		} else if (charRead == '#') { // Boolean Type
-			Value *val = parseBoolean()			
+			Value *val = parseBoolean();		
 			list = cons(val, list);	
-		} else if (charRead == '+' || charRead == '-') {
-			Value *val = talloc(sizeof(Value));
+		} else if (charRead == '+' || charRead == '-') { // +/- Special Case
+			Value *val;
 			char sign = charRead;
+
 			charRead = fgetc(stdin);
 			if (isTokenEnder(charRead)) {
+				val = makeNull();
 				val->type = SYMBOL_TYPE;
 				val->s = charToStr(sign);
-			}
-			else {
-				if(charRead == '.') {
+			} else {
+				if (charRead == '.') {
 					charRead = fgetc(stdin);
 					if (isTokenEnder(charRead)) {
                 		printf("Error, %c. is not a valid token", sign);
@@ -135,17 +183,18 @@ Value *tokenize() {
             		}
         	    	ungetc(charRead, stdin);
     	        	ungetc('.', stdin);
-	            	charRead = '0';
+	            	ungetc('0', stdin);
 				}
-				constructNumber(val, charRead);
-				if(sign == '-' && val->type == INT_TYPE) {
+				val = parseNumber(charRead);
+				if (sign == '-' && val->type == INT_TYPE) {
 					val->i *= -1;
 				} else if (sign == '-') {
 					val->d *= -1;
 				}
 			}
+			
 			list = cons(val, list);
-		} else if (charRead == '.') {
+		} else if (charRead == '.') { // . Special Case
 			charRead = fgetc(stdin);
 			if (isTokenEnder(charRead)) {
 				printf("Error, . is not a valid token");
@@ -153,69 +202,32 @@ Value *tokenize() {
 			}
 			ungetc(charRead, stdin);
 			ungetc('.', stdin);
-			charRead = '0';
-			Value *val = talloc(sizeof(Value));
-			constructNumber(val, charRead);
+			Value *val = parseNumber('0');
 			list = cons(val, list);
 		} else if (isDigit(charRead)) { // Number Types
-			Value *val = talloc(sizeof(Value));
-			constructNumber(val, charRead);
+			Value *val = parseNumber(charRead);
 			list = cons(val, list);
-
 		} else if (isSymbolCharacter(charRead) || charRead == '\'') { // Symbol Type
-			Value *val = talloc(sizeof(Value));
-			val->type = SYMBOL_TYPE;
-			char *charString = charToStr(charRead);
-			charRead = fgetc(stdin);
-			while(isSymbolCharacter(charRead)) {
-				charString = catStrChar(charString, charRead);
-				charRead = fgetc(stdin);
-			}
-
-			if (!isTokenEnder(charRead)) {
-                printf("Error, %c is not a valid symbol character\n", charRead);
-                texit(1);
-            }
-			ungetc(charRead, stdin);
-			val->s = charString;
+			Value *val = parseSymbol(charRead);
 			list = cons(val, list);
 		} else if (charRead == '\"') { // String Type
-			Value *val = talloc(sizeof(Value));
-			val->type = STR_TYPE;
-            char *charString = charToStr(charRead);
-			charRead = fgetc(stdin);
-			while(charRead != '\"') {
-				if(charRead == EOF) {
-					printf("Error, unterminated string");
-					texit(1);
-				}
-				if(charRead == '\\') {
-					charString = catStrChar(charString, charRead);
-					charRead = fgetc(stdin);
-				}
-				charString = catStrChar(charString, charRead);
-				charRead = fgetc(stdin);
-			}
-			charString = catStrChar(charString, charRead);
-
-			val->s = charString;
+			Value *val = parseString(charRead);
 			list = cons(val, list);
-		} else if(charRead == ';') { // Comments
+		} else if (charRead == ';') { // Comments
 			charRead = fgetc(stdin);
-			while(charRead != '\n' && charRead != EOF) {
+			while (charRead != '\n' && charRead != EOF) {
 				charRead = fgetc(stdin);
 			}
 			ungetc(charRead, stdin);
-		}
-		else if(isTokenEnder(charRead)) {
+		} else if (isTokenEnder(charRead)) {
 			// No action needed, whitespace
-		}
-		else {
+		} else {
 			printf("Error, %c is not a valid character to start a token\n", charRead);
 			texit(1);
 		}
 		charRead = fgetc(stdin);
 	}
+
 	return reverse(list);
 }
 
@@ -225,9 +237,9 @@ Value *tokenize() {
  */
 void displayTokens(Value *list) {
 	Value *token;
-	while(!isNull(list)) {
+	while (!isNull(list)) {
 		token = car(list);
-		switch(token->type) {
+		switch (token->type) {
 			case INT_TYPE:
 				printf("%d:integer\n", token->i);
 				break;
