@@ -1,0 +1,61 @@
+;; Test file for complete test to make sure tokenizer doesn't fail
+
+;; Helper Functions
+
+(define lazy-infinite-range
+  (lambda (first)
+    (cons first (lambda () (lazy-infinite-range (+ first 1))))))
+
+
+(define first-n
+  (lambda (llst n)
+    (if (or (equal? llst '())
+            (< n 1))
+        '()
+        (cons (car llst) (first-n ((cdr llst)) (- n 1))))))
+
+
+(define nth
+  (lambda (llst n)
+    (and (not (equal? llst '()))
+         (if (< n 2)
+             (car llst)
+             (nth ((cdr llst)) (- n 1))))))
+
+
+(define lazy-filter
+  (lambda (predicate llst)
+    (if (equal? llst '())
+        '()
+        (if (predicate (car llst))
+            (cons (car llst) (lambda () (lazy-filter predicate ((cdr llst)))))
+            (lazy-filter predicate ((cdr llst)))))))
+
+
+(define not-divisible-by
+  (lambda (d)
+    (lambda (n)
+      (not (equal? (modulo n d) 0)))))
+
+
+;; seive: helper function that returns a lazy list with all multiples of (car llst) removed from llst
+
+(define seive
+  (lambda (llst)
+    (lazy-filter (not-divisible-by (car llst))
+                 ((cdr llst)))))
+
+
+;; primes-rec: recursive helper function for primes
+
+(define primes-rec
+  (lambda (llst)
+    (cons (car llst)
+          (lambda () (primes-rec (seive llst))))))
+
+
+;; prime: returns an infinite (lazy) list of primes
+
+(define primes
+  (lambda ()
+    (primes-rec (lazy-infinite-range 2))))

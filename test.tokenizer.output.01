@@ -1,0 +1,18 @@
+(:open
++:symbol
+x2:symbol
+(:open
+-:symbol
+(:open
+quote:symbol
+(:open
+x:symbol
+-20.200000:float
+0.720000:float
+):close
+):close
+"foo;; \"\n still a string":string
+-23:integer
+):close
+186.270000:float
+):close
