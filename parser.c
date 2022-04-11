@@ -1,15 +1,15 @@
 // Parses scheme code into a parse tree from an ordered list of tokens
 // Authors: Jon, Isaac, Aidan
 
+#include <stdio.h>
 #include "parser.h"
 
 Value *parse(Value *tokens) {
 	Value *stack = makeNull();
 	int depth = 0;
 	
-	while(!isNull(cdr(tokens))) {
+	while (!isNull(tokens)) {
 		Value *token = car(tokens);
-		tokens = cdr(tokens);
 		
 		if(token->type != CLOSE_TYPE) {
 			if(token->type == OPEN_TYPE) {
@@ -19,24 +19,71 @@ Value *parse(Value *tokens) {
 		}
 		else if (token->type == CLOSE_TYPE) {
 			depth--;
+			if (depth < 0) {
+				printf("Not enough opening parentheses!\n");
+				texit(1);
+			}
 			Value *cur = car(stack);
 			Value *popped = makeNull();
 			stack = cdr(stack);
-			while(cur->type != OPEN_TYPE) { //TODO: check for null, proper number of open/close parens
+			while(cur->type != OPEN_TYPE) {
 				popped = cons(cur, popped);
 				cur = car(stack);
 				stack = cdr(stack);
 			}
 			stack = cons(popped, stack);
-		}
+		}	
+
+		tokens = cdr(tokens);
 	}
 	if(depth != 0) {
-		printf("Not enough closing parenthesees.");
+		printf("Not enough closing parenthesees.\n");
 		texit(1);
 	}
-	return stack;
+	return reverse(stack);
 }
 
 void printTree(Value *tree) {
+	if (isNull(tree)) {
 	
+	}
+
+	else if (tree->type != CONS_TYPE) {
+		switch (tree->type) {
+		case STR_TYPE:
+		case BOOL_TYPE:
+		case SYMBOL_TYPE:
+			printf("%s", tree->s);
+			break;
+		case INT_TYPE:
+			printf("%i", tree->i);
+			break;
+		case DOUBLE_TYPE:
+			printf("%lf", tree->d);
+			break;
+		default:
+			// Don't handle other cases
+			break;
+		}
+	}
+	
+	else {
+		if (car(tree)->type == CONS_TYPE) {
+			printf("(");
+			printTree(car(tree));
+			printf(")");
+		} else if (car(tree)->type == NULL_TYPE) {
+			printf("()");
+		} else {
+			printTree(car(tree));
+		}
+		
+		if (cdr(tree)->type != NULL_TYPE) {
+			printf(" ");
+		}
+
+		printTree(cdr(tree));
+	}
+
 }
+

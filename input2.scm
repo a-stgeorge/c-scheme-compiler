@@ -1,0 +1,6 @@
+;; A more complicated test of scheme code, specifically to test edge cases
+
+(and (if #t #f (- 0.32 -.32))
+	 (if > (+ (+ 3314314 +0.4) -44444)))
+
+(define string1 "This is a string!")

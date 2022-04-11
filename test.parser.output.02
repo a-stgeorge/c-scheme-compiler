@@ -1,0 +1,4 @@
+(and (if #t #f (- 0.320000 -0.320000)) (if > (+ (+ 3314314 0.400000) -44444))) (define string1 "This is a string! 
+
+	With special characters! - \, ', and "
+;;And this is a comment in a string!")
