@@ -6,3 +6,6 @@ We got some help from Dr. Yang.
 
 proj3
 We got some help from Dr. Yang in class (asking questions).
+
+proj4
+We got some help from Dr. Yang in class (asking questions on Friday and Monday).
