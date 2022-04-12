@@ -8,6 +8,7 @@ Value *parse(Value *tokens) {
 	Value *stack = makeNull();
 	int depth = 0;
 	
+	assert(tokens != NULL && "Error (parse): null pointer");
 	while (!isNull(tokens)) {
 		Value *token = car(tokens);
 		
@@ -20,7 +21,7 @@ Value *parse(Value *tokens) {
 		else if (token->type == CLOSE_TYPE) {
 			depth--;
 			if (depth < 0) {
-				printf("Not enough opening parentheses!\n");
+				printf("Syntax error: too many close parentheses\n");
 				texit(1);
 			}
 			Value *cur = car(stack);
@@ -37,7 +38,7 @@ Value *parse(Value *tokens) {
 		tokens = cdr(tokens);
 	}
 	if(depth != 0) {
-		printf("Not enough closing parenthesees.\n");
+		printf("Syntax error: not enough close parentheses\n");
 		texit(1);
 	}
 	return reverse(stack);
