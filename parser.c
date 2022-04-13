@@ -2,6 +2,7 @@
 // Authors: Jon, Isaac, Aidan
 
 #include <stdio.h>
+#include <assert.h>
 #include "parser.h"
 
 Value *parse(Value *tokens) {
