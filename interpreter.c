@@ -20,12 +20,12 @@ Value *lookUpSymbol(Value *tree, Frame *frame) {
 	}
 	Value *binding = frame->bindings;
 	while(!isNull(binding)) {
-		if(car(car(binding))->s == tree->s) {
-			return car(cdr(binding));
+		if(!strcmp(car(car(binding))->s, tree->s)) {
+			return cdr(car(binding));
 		}
 		binding = cdr(binding);
 	}
-	lookUpSymbol(tree, frame->parent);
+	return lookUpSymbol(tree, frame->parent);
 }
 
 Value *evalIf(Value *args, Frame *frame) {
@@ -34,7 +34,7 @@ Value *evalIf(Value *args, Frame *frame) {
 		texit(1);
 	}
 
-	if (eval(car(args))->s != "#f") {
+	if (strcmp(eval(car(args), frame)->s, "#f")) {
 		return eval(car(cdr(args)), frame);
 	}
 
@@ -46,7 +46,7 @@ Value *evalQuote(Value *args) {
 		printf("quote must have one argument\n");
 		texit(1);
 	}
-	return car(args);
+	return args;
 }
 
 Value *evalLet(Value *args, Frame *frame) {
@@ -82,17 +82,16 @@ Value *evalLet(Value *args, Frame *frame) {
 }
 
 Value *eval(Value *expr, Frame *frame) {
+	
 	switch(expr->type) {
 		case INT_TYPE:
 		case DOUBLE_TYPE:
 		case STR_TYPE:
 		case BOOL_TYPE:
 			return expr;
-			break;
 		case SYMBOL_TYPE:
 			return lookUpSymbol(expr, frame);
-			break;
-		case CONS_TYPE:
+		case CONS_TYPE: {
 			Value *first = car(expr);
 			Value *args = cdr(expr);
 		
@@ -105,7 +104,7 @@ Value *eval(Value *expr, Frame *frame) {
 				texit(1);
 			}
 			
-			// Evaluate function
+			// Evaluate functions
 			if (!strcmp(first->s, "if")) {
 				return evalIf(args, frame);
 			}
@@ -121,11 +120,15 @@ Value *eval(Value *expr, Frame *frame) {
 			// ... further special forms here ...
 
 			else {
-				// not a recognized special form
-				evaluationError();
+				printf("Function %s not recognized\n", first->s);
+				texit(1);
 			}
-			break;
+
+			return NULL;  // to make the compiler happy
+		}
 		default:
-			break;
+			printf("Invalid token for evaluation");
+			texit(1);
+			return NULL;  // To make the compiler happy
 	}
 }
