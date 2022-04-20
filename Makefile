@@ -3,14 +3,14 @@
 CC = clang
 CFLAGS = -g
 
-SRCS = linkedlist.c main_parse.c parser.c talloc.c tokenizer.c
-HDRS = linkedlist.h value.h talloc.h tokenizer.h
+SRCS = linkedlist.c main.c parser.c talloc.c tokenizer.c interpreter.c
+HDRS = linkedlist.h value.h talloc.h tokenizer.h interpreter.h
 OBJS = $(SRCS:.c=.o)
 
-parser: $(OBJS)
+interpreter: $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 
-memtest: parser
+memtest: interpreter
 	valgrind --leak-check=full --show-leak-kinds=all ./$<
 
 %.o : %.c $(HDRS)
@@ -18,4 +18,4 @@ memtest: parser
 
 clean:
 	rm -f *.o
-	rm -f parser
+	rm -f interpreter
