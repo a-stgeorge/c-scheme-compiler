@@ -1,0 +1,7 @@
+;; Test of let
+
+(let ((x 23)
+      (y 371))
+  (if #t x y))
+
+(let ((x #t) (y #f) (z 24)) (if x y z))

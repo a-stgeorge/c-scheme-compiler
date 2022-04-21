@@ -1,3 +1,5 @@
+;; Test of quote, let, if
+
 (let ((foo "hello")
       (bar (quote foo))
       (baz #f))
