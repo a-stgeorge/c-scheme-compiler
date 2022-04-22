@@ -94,7 +94,10 @@ bool isNull(Value *value) {
 // Assumes that the Value passed in is of CONS_TYPE.
 int length(Value *value) {
 	int size = 0;
-	if (value->type != CONS_TYPE) {
+	if(value->type == NULL_TYPE) {
+		return 0;
+	}
+	else if (value->type != CONS_TYPE) {
 		return 1;
 	}
 	for(size = 0; !isNull(value); size++) {

@@ -1,6 +1,28 @@
-;; Test of quote, let, if
+;Test error cases
 
-(let ((foo "hello")
-      (bar (quote foo))
-      (baz #f))
-  (if baz foo bar))
+;;Uncomment to test invalid identifier
+x
+
+;;Uncomment to test too many if arguments
+;(if #f 12 31 4)
+
+;;Uncomment to test too few if arguments
+;(if)
+
+;;Uncomment to test too many quote arguments
+;(quote 2 3)
+
+;;Uncomment to test too few quote arguments
+;(quote)
+
+;;Uncomment to test invalid lets
+;(let x 3)
+;(let)
+;(let ((x #t) (y #f) (z 24)))
+;(let ((x #t) (y #f) (z 24)) x y)
+;(let (x y z) x)
+;(let ((3 5)) 3)
+
+;;Uncomment for other test cases
+;(hey 1)
+

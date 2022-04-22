@@ -1,5 +1,12 @@
+;Test basic
 #t
 23
 "hello"
 1.234
 x
+
+;Test of quote, let, if
+(let ((foo "hello")
+		(bar (quote foo))
+		(baz #f))
+	(if baz foo bar))
