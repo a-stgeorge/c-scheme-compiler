@@ -2,11 +2,12 @@
 #include <string.h>
 #include "interpreter.h"
 
+
 void interpret(Value *tree) {
+	Frame *parentFrame = talloc(sizeof(Frame));
+	parentFrame->bindings = makeNull();
+	parentFrame->parent = NULL;
 	while(!isNull(tree)) {
-		Frame *parentFrame = talloc(sizeof(Frame));
-		parentFrame->bindings = makeNull();
-		parentFrame->parent = NULL;
 		printTree(eval(car(tree), parentFrame));
 		printf("\n");
 		tree = cdr(tree);
@@ -81,8 +82,34 @@ Value *evalLet(Value *args, Frame *frame) {
 	return eval(car(cdr(args)), newFrame);
 }
 
-Value *eval(Value *expr, Frame *frame) {
+Value *evalDefine(Value *args, Frame *frame) {
+	Frame *curFrame = frame;
+	while(curFrame->parent != NULL) {
+		curFrame = curFrame->parent;
+	}
+	if(length(args) != 2) {
+		printf("Invalid define, must have exactly 2 arguments");
+	}
+	Value *returnValue = makeNull();
+	returnValue->type = VOID_TYPE;
 	
+	Value *bindings = frame->bindings;
+	while(!isNull(bindings)) {
+		if(!strcmp(car(car(bindings))->s, car(args)->s)) {
+			Value *existingBinding = cdr(car(bindings));
+			existingBinding = eval(car(cdr(args)), frame);
+			return returnValue;
+		}
+		bindings = cdr(bindings);
+	}
+	
+	Value *newBinding = cons(car(args), eval(car(cdr(args)), frame));
+	curFrame->bindings = cons(newBinding, curFrame->bindings);
+	
+	return returnValue;
+}
+
+Value *eval(Value *expr, Frame *frame) {
 	switch(expr->type) {
 		case INT_TYPE:
 		case DOUBLE_TYPE:
@@ -115,6 +142,9 @@ Value *eval(Value *expr, Frame *frame) {
 
 			else if (!strcmp(first->s, "let")) {
 				return evalLet(args, frame);
+			}
+			else if(!strcmp(first->s, "define")) {
+				return evalDefine(args, frame);
 			}
 
 			// ... further special forms here ...
