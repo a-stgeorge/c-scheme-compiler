@@ -89,6 +89,7 @@ Value *evalDefine(Value *args, Frame *frame) {
 	}
 	if(length(args) != 2) {
 		printf("Invalid define, must have exactly 2 arguments");
+		texit(1);
 	}
 	Value *returnValue = makeNull();
 	returnValue->type = VOID_TYPE;
@@ -109,12 +110,69 @@ Value *evalDefine(Value *args, Frame *frame) {
 	return returnValue;
 }
 
+Value *evalLambda(Value *args, Frame *frame) {
+	if(length(args) != 2) {
+		printf("Invalid lambda, must have exactly 2 arguments");
+		texit(1);
+	}
+	Value *lambdaValue = makeNull();
+	lambdaValue->type = CLOSURE_TYPE;
+
+	Value *param = car(args);
+	if(param->type != CONS_TYPE) {
+		printf("Invalid lambda paramaters, needs to be a list of symbols");
+		texit(1);
+	}
+	while(!isNull(param)) {
+		if(car(param)->type != SYMBOL_TYPE) {
+			printf("Invalid lambda paramaters, needs to be a list of symbols");
+        	texit(1);
+		}
+		param = cdr(param);
+	}
+
+	lambdaValue->closure.args = car(args);
+	lambdaValue->closure.body = car(cdr(args));
+	lambdaValue->closure.frame = frame;
+	return lambdaValue;
+}
+
+Value *apply(Value *function, Value *args) {
+	if (function->type != CLOSURE_TYPE) {
+		printf("Invalid combination, must start with a function");
+		texit(1);
+	}
+	Frame *curFrame = talloc(sizeof(Frame));
+	curFrame->parent = function->closure.frame;
+	curFrame->bindings = makeNull();
+
+	Value *param = function->closure.args;
+	while(!isNull(param)) {
+		if(isNull(args)) {
+			printf("Invalid function call, not enough arguments");
+			texit(1);
+		}
+		Value *binding = cons(car(param), car(args));
+		curFrame->bindings = cons(binding, curFrame->bindings);
+
+		param = cdr(param);
+		args = cdr(args);
+	}
+	if(!isNull(args)) {
+		printf("Invalid function call, too many arguments");
+		texit(1);
+	}
+
+	return eval(function->closure.body, curFrame);
+}
+
 Value *eval(Value *expr, Frame *frame) {
 	switch(expr->type) {
 		case INT_TYPE:
 		case DOUBLE_TYPE:
 		case STR_TYPE:
 		case BOOL_TYPE:
+		case CLOSURE_TYPE:
 			return expr;
 		case SYMBOL_TYPE:
 			return lookUpSymbol(expr, frame);
@@ -124,6 +182,16 @@ Value *eval(Value *expr, Frame *frame) {
 		
 			if (first->type == CONS_TYPE) {
 				first = eval(first, frame);
+			}
+
+			if (first->type == CLOSURE_TYPE) {
+				Value *arg = args;
+				while(!isNull(arg)) {
+					Value *val = car(arg);
+					val = eval(car(arg), frame);
+					arg = cdr(arg);
+				}
+				return apply(first, args);
 			} 
 			
 			if (first->type != SYMBOL_TYPE) {
@@ -147,9 +215,24 @@ Value *eval(Value *expr, Frame *frame) {
 				return evalDefine(args, frame);
 			}
 
+			else if(!strcmp(first->s, "lambda")) {
+				return evalLambda(args, frame);
+			}
+
 			// ... further special forms here ...
 
 			else {
+				first = eval(first, frame);
+				if (first->type == CLOSURE_TYPE) {
+	                Value *arg = args;
+    	            while(!isNull(arg)) {
+        	            Value *val = car(arg);
+                    	val = eval(car(arg), frame);
+            	        arg = cdr(arg);
+                	}
+                	return apply(first, args);
+            	}
+
 				printf("Function %s not recognized\n", first->s);
 				texit(1);
 			}
