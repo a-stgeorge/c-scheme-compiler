@@ -1,6 +1,13 @@
-;; A more complicated test of scheme code, specifically to test edge cases
+(define not
+  (lambda (bool)
+	(if bool #f #t)))
 
-(and (if #t #f (- 0.32 -.32))
-	 (if > (+ (+ 3314314 +0.4) -44444)))
+(define f
+  (lambda (x y z)
+	(let ((cond (not x)))
+	  (if cond y z))))
 
-(define string1 "This is a string!")
+
+(f #f 2 3)
+
+(if (not #f) 4 5)

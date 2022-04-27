@@ -1,1 +1,11 @@
-(+ x2 ( - ( quote (x -.2 .72)) "foo;; \"\\n still a string" -23) 186.27) ;; comment
+(define not
+  (lambda (bool)
+    (if bool #f #t)))
+    
+(define tofu
+  (lambda (cond conseq alt)
+    (let ((nconseq (not conseq))
+          (nalt (not alt)))
+      (if cond nconseq nalt))))
+    
+(tofu 23 #f #t)

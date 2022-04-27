@@ -35,7 +35,8 @@ Value *evalIf(Value *args, Frame *frame) {
 		texit(1);
 	}
 
-	if (strcmp(eval(car(args), frame)->s, "#f")) {
+	Value *cond = eval(car(args), frame);
+	if (cond->type != BOOL_TYPE || strcmp(cond->s, "#f")) {
 		return eval(car(cdr(args)), frame);
 	}
 
@@ -88,7 +89,7 @@ Value *evalDefine(Value *args, Frame *frame) {
 		curFrame = curFrame->parent;
 	}
 	if(length(args) != 2) {
-		printf("Invalid define, must have exactly 2 arguments");
+		printf("Invalid define, must have exactly 2 arguments\n");
 		texit(1);
 	}
 	Value *returnValue = makeNull();
@@ -112,7 +113,7 @@ Value *evalDefine(Value *args, Frame *frame) {
 
 Value *evalLambda(Value *args, Frame *frame) {
 	if(length(args) != 2) {
-		printf("Invalid lambda, must have exactly 2 arguments");
+		printf("Invalid lambda, must have exactly 2 arguments\n");
 		texit(1);
 	}
 	Value *lambdaValue = makeNull();
@@ -120,12 +121,12 @@ Value *evalLambda(Value *args, Frame *frame) {
 
 	Value *param = car(args);
 	if(param->type != CONS_TYPE) {
-		printf("Invalid lambda paramaters, needs to be a list of symbols");
+		printf("Invalid lambda paramaters, needs to be a list of symbols\n");
 		texit(1);
 	}
 	while(!isNull(param)) {
 		if(car(param)->type != SYMBOL_TYPE) {
-			printf("Invalid lambda paramaters, needs to be a list of symbols");
+			printf("Invalid lambda paramaters, needs to be a list of symbols\n");
         	texit(1);
 		}
 		param = cdr(param);
@@ -139,7 +140,7 @@ Value *evalLambda(Value *args, Frame *frame) {
 
 Value *apply(Value *function, Value *args) {
 	if (function->type != CLOSURE_TYPE) {
-		printf("Invalid combination, must start with a function");
+		printf("Invalid combination, must start with a function\n");
 		texit(1);
 	}
 	Frame *curFrame = talloc(sizeof(Frame));
@@ -149,7 +150,7 @@ Value *apply(Value *function, Value *args) {
 	Value *param = function->closure.args;
 	while(!isNull(param)) {
 		if(isNull(args)) {
-			printf("Invalid function call, not enough arguments");
+			printf("Invalid function call, not enough arguments\n");
 			texit(1);
 		}
 		Value *binding = cons(car(param), car(args));
@@ -159,7 +160,7 @@ Value *apply(Value *function, Value *args) {
 		args = cdr(args);
 	}
 	if(!isNull(args)) {
-		printf("Invalid function call, too many arguments");
+		printf("Invalid function call, too many arguments\n");
 		texit(1);
 	}
 
@@ -185,13 +186,14 @@ Value *eval(Value *expr, Frame *frame) {
 			}
 
 			if (first->type == CLOSURE_TYPE) {
-				Value *arg = args;
-				while(!isNull(arg)) {
-					Value *val = car(arg);
-					val = eval(car(arg), frame);
-					arg = cdr(arg);
-				}
-				return apply(first, args);
+                Value *newArgs = makeNull();
+                while(!isNull(args)) {
+                    Value *arg = eval(car(args), frame);
+                    newArgs = cons(arg, newArgs);
+                    args = cdr(args);
+                }
+                newArgs = reverse(newArgs);
+				return apply(first, newArgs);
 			} 
 			
 			if (first->type != SYMBOL_TYPE) {
@@ -222,25 +224,24 @@ Value *eval(Value *expr, Frame *frame) {
 			// ... further special forms here ...
 
 			else {
-				first = eval(first, frame);
-				if (first->type == CLOSURE_TYPE) {
-	                Value *arg = args;
-    	            while(!isNull(arg)) {
-        	            Value *val = car(arg);
-                    	val = eval(car(arg), frame);
-            	        arg = cdr(arg);
-                	}
-                	return apply(first, args);
-            	}
+	            args = expr;
+				Value *newArgs = makeNull();
+    	        while(!isNull(args)) {
+                 	Value *arg = eval(car(args), frame);
+            	    newArgs = cons(arg, newArgs);
+					args = cdr(args);
+                }
+				newArgs = reverse(newArgs);
+                return eval(newArgs, frame);
 
-				printf("Function %s not recognized\n", first->s);
-				texit(1);
+				//printf("Function %s not recognized\n", first->s);
+				//texit(1);
 			}
 
 			return NULL;  // to make the compiler happy
 		}
 		default:
-			printf("Invalid token for evaluation");
+			printf("Invalid token for evaluation\n");
 			texit(1);
 			return NULL;  // To make the compiler happy
 	}
