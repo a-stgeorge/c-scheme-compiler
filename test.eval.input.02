@@ -1,5 +1,6 @@
-;; Test of quote
+(define return-bool
+	(lambda (cond) (if cond #t #f)))
 
-(quote a)
-(quote (a b c))
-(quote (a b (quote (c d e))))
+(return-bool #t)
+(return-bool #f)
+(return-bool (if 5 #t #f))

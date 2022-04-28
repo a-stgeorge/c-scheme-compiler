@@ -36,11 +36,11 @@ Value *evalIf(Value *args, Frame *frame) {
 	}
 
 	Value *cond = eval(car(args), frame);
-	if (cond->type != BOOL_TYPE || strcmp(cond->s, "#f")) {
-		return eval(car(cdr(args)), frame);
+	if (cond->type == BOOL_TYPE && !strcmp(cond->s, "#f")) {
+		return eval(car(cdr(cdr(args))), frame);
 	}
 
-	return eval(car(cdr(cdr(args))), frame);
+	return eval(car(cdr(args)), frame);
 }
 
 Value *evalQuote(Value *args) {

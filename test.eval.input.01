@@ -1,7 +1,8 @@
-;; Test of let
+(define print
+	(lambda (x) x))
 
-(let ((x 23)
-      (y 371))
-  (if #t x y))
-
-(let ((x #t) (y #f) (z 24)) (if x y z))
+(print 5)
+(print 7)
+(print #t)
+(print #f)
+(print (quote a))

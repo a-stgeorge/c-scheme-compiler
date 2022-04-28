@@ -1,28 +1,16 @@
-;Test error cases
+(define second-arg
+	(lambda (x y z) y))
 
-;;Uncomment to test invalid identifier
-x
+(second-arg 1 2 3)
+(second-arg 1 #t 3)
+(second-arg 1 #f 3)
+(second-arg 5 7 9)
 
-;;Uncomment to test too many if arguments
-;(if #f 12 31 4)
+(define second-if
+	(lambda (x y z) (if y #t #f)))
 
-;;Uncomment to test too few if arguments
-;(if)
+(second-if #t #f #t)
+(second-if #f #t #f)
+(second-if 3 5 7)
 
-;;Uncomment to test too many quote arguments
-;(quote 2 3)
-
-;;Uncomment to test too few quote arguments
-;(quote)
-
-;;Uncomment to test invalid lets
-;(let x 3)
-;(let)
-;(let ((x #t) (y #f) (z 24)))
-;(let ((x #t) (y #f) (z 24)) x y)
-;(let (x y z) x)
-;(let ((3 5)) 3)
-
-;;Uncomment for other test cases
-;(hey 1)
-
+(if #f 1 3)
