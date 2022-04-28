@@ -63,6 +63,9 @@ void printTree(Value *tree) {
 		case DOUBLE_TYPE:
 			printf("%lf", tree->d);
 			break;
+		case CLOSURE_TYPE:
+			printf("#<procedure>");
+			break;
 		default:
 			// Don't handle other cases
 			break;

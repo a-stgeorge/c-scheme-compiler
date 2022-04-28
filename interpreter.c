@@ -8,8 +8,11 @@ void interpret(Value *tree) {
 	parentFrame->bindings = makeNull();
 	parentFrame->parent = NULL;
 	while(!isNull(tree)) {
-		printTree(eval(car(tree), parentFrame));
-		printf("\n");
+		Value *result = eval(car(tree), parentFrame);
+		printTree(result);
+		if (result->type != VOID_TYPE) {
+			printf("\n");
+		}
 		tree = cdr(tree);
 	}
 }
@@ -48,6 +51,9 @@ Value *evalQuote(Value *args) {
 		printf("quote must have one argument\n");
 		texit(1);
 	}
+	
+	printTree(args);
+	printf("\n");
 	return args;
 }
 
@@ -232,7 +238,7 @@ Value *eval(Value *expr, Frame *frame) {
 					args = cdr(args);
                 }
 				newArgs = reverse(newArgs);
-                return eval(newArgs, frame);
+                return apply(car(newArgs), cdr(newArgs));
 
 				//printf("Function %s not recognized\n", first->s);
 				//texit(1);
