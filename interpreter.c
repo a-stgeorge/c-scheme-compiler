@@ -2,6 +2,27 @@
 #include <string.h>
 #include "interpreter.h"
 
+// helper function that determines if list of values list contains a particular symbol symb.
+static bool contains(Value *list, Value *symb) {
+	if (symb->type != SYMBOL_TYPE) {
+		printf("Invalid symbol type\n");
+		texit(1);
+	}
+	
+	Value *cur = list;
+	while (!isNull(cur)) {
+		if (cur->type != CONS_TYPE) {
+			printf("Invalid list\n");
+			texit(1);
+		}
+		if (!strcmp(car(cur)->s, symb->s)) {
+			return true;
+		}
+		cur = cdr(cur);
+	}
+
+	return false;
+}
 
 void interpret(Value *tree) {
 	Frame *parentFrame = talloc(sizeof(Frame));
@@ -52,7 +73,6 @@ Value *evalQuote(Value *args) {
 		texit(1);
 	}
 	
-	printTree(args);
 	printf("\n");
 	return args;
 }
@@ -100,6 +120,11 @@ Value *evalDefine(Value *args, Frame *frame) {
 	}
 	Value *returnValue = makeNull();
 	returnValue->type = VOID_TYPE;
+
+	if (car(args)->type != SYMBOL_TYPE) {
+		printf("Can only define symbols.\n");
+		texit(1);
+	}
 	
 	Value *bindings = frame->bindings;
 	while(!isNull(bindings)) {
@@ -130,10 +155,16 @@ Value *evalLambda(Value *args, Frame *frame) {
 		printf("Invalid lambda paramaters, needs to be a list of symbols\n");
 		texit(1);
 	}
+
+	Value *iter;
 	while(!isNull(param)) {
 		if(car(param)->type != SYMBOL_TYPE) {
 			printf("Invalid lambda paramaters, needs to be a list of symbols\n");
         	texit(1);
+		}
+		if (contains(cdr(param), car(param))) {
+			printf("Invalid lambda parameters, cannot have more than one symbol of the same type.\n");
+			texit(1);
 		}
 		param = cdr(param);
 	}
