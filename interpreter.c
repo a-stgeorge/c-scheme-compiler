@@ -73,7 +73,6 @@ Value *evalQuote(Value *args) {
 		texit(1);
 	}
 	
-	printf("\n");
 	return args;
 }
 
