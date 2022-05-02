@@ -24,10 +24,56 @@ static bool contains(Value *list, Value *symb) {
 	return false;
 }
 
+void bind(char *name, Value *(*function)(Value *), Frame *frame) {
+	Value *value = makeNull();
+	value->type = PRIMITIVE_TYPE;
+	value->pf = function;
+
+	Value *symbol = makeNull();
+	symbol->type = SYMBOL_TYPE;
+	symbol->s = name;
+	Value *binding = cons(symbol, value);
+	frame->bindings = cons(binding, frame->bindings);
+}
+
+// PRIMITIVE FUNCTION DEFINITIONS
+Value *primitiveAdd(Value *args) {
+	double sum = 0;
+	bool hasDoubles = false;
+	// error checking on args, a list of inputs
+	// compute the result as a single value
+	Value *cur = args;
+	while (!isNull(cur)) {
+		if (car(cur)->type == INT_TYPE) {
+			sum += car(cur)->i;
+		} else if (car(cur)->type == DOUBLE_TYPE) {
+			hasDoubles = true;
+			sum += car(cur)->d;
+		} else {
+			printf("+ can only take in numbers\n");
+			texit(1);
+		}
+		cur = cdr(cur);
+	}
+	Value *returnValue = makeNull();
+	if (hasDoubles) {
+		returnValue->type = DOUBLE_TYPE;
+		returnValue->d = sum;
+	} else {
+		returnValue->type = INT_TYPE;
+		returnValue->i = (int) sum;
+	}
+	return returnValue;
+}
+
+// MAIN INTERPRET FUNCITON
 void interpret(Value *tree) {
 	Frame *parentFrame = talloc(sizeof(Frame));
 	parentFrame->bindings = makeNull();
 	parentFrame->parent = NULL;
+	bind("+", primitiveAdd, parentFrame);
+	// TODO add primitive functions
+
 	while(!isNull(tree)) {
 		Value *result = eval(car(tree), parentFrame);
 		printTree(result);
@@ -150,7 +196,7 @@ Value *evalLambda(Value *args, Frame *frame) {
 	lambdaValue->type = CLOSURE_TYPE;
 
 	Value *param = car(args);
-	if(param->type != CONS_TYPE) {
+	if(param->type != CONS_TYPE && param->type != NULL_TYPE) {
 		printf("Invalid lambda paramaters, needs to be a list of symbols\n");
 		texit(1);
 	}
@@ -175,6 +221,10 @@ Value *evalLambda(Value *args, Frame *frame) {
 }
 
 Value *apply(Value *function, Value *args) {
+	if (function->type == PRIMITIVE_TYPE) {
+		return (function->pf)(args);
+	}
+	
 	if (function->type != CLOSURE_TYPE) {
 		printf("Invalid combination, must start with a function\n");
 		texit(1);

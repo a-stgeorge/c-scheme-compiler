@@ -188,6 +188,7 @@ Value *tokenize() {
 				val = makeNull();
 				val->type = SYMBOL_TYPE;
 				val->s = charToStr(sign);
+				ungetc(charRead, stdin);
 			} else {
 				if (charRead == '.') {
 					charRead = fgetc(stdin);
