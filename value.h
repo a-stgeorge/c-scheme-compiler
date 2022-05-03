@@ -13,7 +13,8 @@ typedef enum {
    SYMBOL_TYPE,
    NULL_TYPE,
    VOID_TYPE,
-   CLOSURE_TYPE
+   CLOSURE_TYPE,
+   PRIMITIVE_TYPE
 } valueType;
 
 struct Value {
@@ -32,6 +33,7 @@ struct Value {
 		 struct Value *body;
 		 struct Frame *frame;
       } closure;
+	  struct Value *(*pf)(struct Value *);
    };
 };
 

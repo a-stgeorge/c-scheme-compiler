@@ -2,4 +2,6 @@
 
 ;(define x)
 ;(define 3 5)
-(lambda (x x) x)
+;(lambda (x x) x)
+(define x (lambda () (quote (1 2 3))))
+(x)
