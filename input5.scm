@@ -13,3 +13,5 @@
 ;(null? if)
 (car (quote (2 3 4 5)))
 (cdr (quote (2 3 4 5)))
+(cons (+ 1 3) 2)
+

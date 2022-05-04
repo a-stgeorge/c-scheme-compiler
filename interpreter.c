@@ -68,11 +68,11 @@ Value *primitiveAdd(Value *args) {
 
 Value *primitiveIsNull(Value *args) {
 	if(length(args) != 1) {
-		printf("null? can only have one argument");
+		printf("null? can only have one argument\n");
 		texit(1);
 	}
 	if(car(args)->type == SYMBOL_TYPE) {
-		printf("Invalid arguments");
+		printf("Invalid arguments\n");
 		texit(1);
 	}
 	
@@ -89,11 +89,11 @@ Value *primitiveIsNull(Value *args) {
 
 Value *primitiveCar(Value *args) {
 	if(length(args) != 1) {
-		printf("car can only have one argument");
+		printf("car can only have one argument\n");
 		texit(1);
 	}
 	if(args->type != CONS_TYPE) {
-		printf("car function expects a list");
+		printf("car function expects a list\n");
 		texit(1);
 	}
 	return car(car(car(args)));
@@ -101,14 +101,22 @@ Value *primitiveCar(Value *args) {
 
 Value *primitiveCdr(Value *args) {
 	if(length(args) != 1) {
-		printf("cdr can only have one argument");
+		printf("cdr can only have one argument\n");
 		texit(1);
 	}
 	if(args->type != CONS_TYPE) {
-		printf("cdr function expects a list");
+		printf("cdr function expects a list\n");
 		texit(1);
 	}
 	return cdr(car(car(args)));
+}
+
+Value *primitiveCons(Value *args) {
+	if(length(args) != 2) {
+		printf("Cons must have exactly two arguments.\n");
+        texit(1);
+	}
+	return cons(car(args), car(cdr(args)));
 }
 
 
@@ -121,7 +129,7 @@ void interpret(Value *tree) {
 	bind("null?", primitiveIsNull, parentFrame);
 	bind("car", primitiveCar, parentFrame);
 	bind("cdr", primitiveCdr, parentFrame);
-	// TODO add primitive functions
+	bind("cons", primitiveCons, parentFrame);
 
 	while(!isNull(tree)) {
 		Value *result = eval(car(tree), parentFrame);
