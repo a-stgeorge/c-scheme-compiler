@@ -45,7 +45,7 @@ Value *parse(Value *tokens) {
 	return reverse(stack);
 }
 
-void printTree(Value *tree) {
+static void printTreeHelper(Value *tree) {
 	if (isNull(tree)) {
 	
 	}
@@ -75,12 +75,12 @@ void printTree(Value *tree) {
 	else {
 		if (car(tree)->type == CONS_TYPE) {
 			printf("(");
-			printTree(car(tree));
+			printTreeHelper(car(tree));
 			printf(")");
 		} else if (car(tree)->type == NULL_TYPE) {
 			printf("()");
 		} else {
-			printTree(car(tree));
+			printTreeHelper(car(tree));
 		}
 		
 		if (cdr(tree)->type != NULL_TYPE) {
@@ -90,8 +90,21 @@ void printTree(Value *tree) {
 			}
 		}
 
-		printTree(cdr(tree));
+		printTreeHelper(cdr(tree));
 	}
 
+}
+
+void printTree(Value *tree) {
+	if (tree->type == CONS_TYPE) {
+		printf("(");
+		printTreeHelper(tree);
+		printf(")");
+	} else if (isNull(tree)) {
+		printf("()");
+	} else {
+		printTreeHelper(tree);
+	}
+	printf("\n");
 }
 

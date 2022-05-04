@@ -11,4 +11,7 @@ y
 z
 a
 
+(cons a 3)
+(cons 3 a)
+
 ;(cons 1 3 5)
