@@ -85,6 +85,9 @@ void printTree(Value *tree) {
 		
 		if (cdr(tree)->type != NULL_TYPE) {
 			printf(" ");
+			if (cdr(tree)->type != CONS_TYPE) {
+				printf(". ");
+			}
 		}
 
 		printTree(cdr(tree));
