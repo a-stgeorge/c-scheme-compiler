@@ -92,11 +92,11 @@ Value *primitiveCar(Value *args) {
 		printf("car can only have one argument\n");
 		texit(1);
 	}
-	if(args->type != CONS_TYPE) {
+	if(car(args)->type != CONS_TYPE || car(car(args))->type != CONS_TYPE) {
 		printf("car function expects a list\n");
 		texit(1);
 	}
-	return car(car(car(args)));
+	return cons(car(car(car(args))), makeNull());
 }
 
 Value *primitiveCdr(Value *args) {
@@ -104,11 +104,11 @@ Value *primitiveCdr(Value *args) {
 		printf("cdr can only have one argument\n");
 		texit(1);
 	}
-	if(args->type != CONS_TYPE) {
+	if(car(args)->type != CONS_TYPE || car(car(args))->type != CONS_TYPE) {
 		printf("cdr function expects a list\n");
 		texit(1);
 	}
-	return cdr(car(car(args)));
+	return cons(cdr(car(car(args))), makeNull());
 }
 
 Value *primitiveCons(Value *args) {
@@ -116,7 +116,18 @@ Value *primitiveCons(Value *args) {
 		printf("Cons must have exactly two arguments.\n");
         texit(1);
 	}
-	return cons(car(args), car(cdr(args)));
+
+	// hack to get lists to work
+	Value *first = car(args);
+	if (first->type == CONS_TYPE) {
+		first = car(first);
+	}
+
+	Value *second = car(cdr(args));
+	if (second->type == CONS_TYPE) {
+		second = car(second);
+	}
+	return cons(cons(first, second), makeNull());
 }
 
 
