@@ -5,4 +5,11 @@
 (+ x -4 3 -2)
 (+)
 (+ 5)
-(+ 3 "hello") ; invalid
+;(+ 3 "hello") ; invalid
+(null? #f)
+(null? #t)
+(null? 5)
+(null? +)
+;(null? if)
+(car (quote (2 3 4 5)))
+(cdr (quote (2 3 4 5)))
