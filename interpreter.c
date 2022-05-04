@@ -66,12 +66,61 @@ Value *primitiveAdd(Value *args) {
 	return returnValue;
 }
 
+Value *primitiveIsNull(Value *args) {
+	if(length(args) != 1) {
+		printf("null? can only have one argument");
+		texit(1);
+	}
+	if(car(args)->type == SYMBOL_TYPE) {
+		printf("Invalid arguments");
+		texit(1);
+	}
+	
+	Value *result = makeNull();
+	result->type = BOOL_TYPE;
+	if(isNull(args)) {
+		result->s = "#t";
+	}
+	else {
+		result->s = "#f";
+	}
+	return result;
+}
+
+Value *primitiveCar(Value *args) {
+	if(length(args) != 1) {
+		printf("car can only have one argument");
+		texit(1);
+	}
+	if(args->type != CONS_TYPE) {
+		printf("car function expects a list");
+		texit(1);
+	}
+	return car(car(car(args)));
+}
+
+Value *primitiveCdr(Value *args) {
+	if(length(args) != 1) {
+		printf("cdr can only have one argument");
+		texit(1);
+	}
+	if(args->type != CONS_TYPE) {
+		printf("cdr function expects a list");
+		texit(1);
+	}
+	return cdr(car(car(args)));
+}
+
+
 // MAIN INTERPRET FUNCITON
 void interpret(Value *tree) {
 	Frame *parentFrame = talloc(sizeof(Frame));
 	parentFrame->bindings = makeNull();
 	parentFrame->parent = NULL;
 	bind("+", primitiveAdd, parentFrame);
+	bind("null?", primitiveIsNull, parentFrame);
+	bind("car", primitiveCar, parentFrame);
+	bind("cdr", primitiveCdr, parentFrame);
 	// TODO add primitive functions
 
 	while(!isNull(tree)) {
@@ -118,7 +167,6 @@ Value *evalQuote(Value *args) {
 		printf("quote must have one argument\n");
 		texit(1);
 	}
-	
 	return args;
 }
 
