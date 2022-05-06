@@ -71,14 +71,10 @@ Value *primitiveIsNull(Value *args) {
 		printf("null? can only have one argument\n");
 		texit(1);
 	}
-	if(car(args)->type == SYMBOL_TYPE) {
-		printf("Invalid arguments\n");
-		texit(1);
-	}
 	
 	Value *result = makeNull();
 	result->type = BOOL_TYPE;
-	if(isNull(args)) {
+	if(isNull(car(args))) {
 		result->s = "#t";
 	}
 	else {
@@ -140,6 +136,9 @@ void interpret(Value *tree) {
 		tree = cdr(tree);
 	}
 }
+
+
+// MAIN HELPER FUNCTIONS
 
 Value *lookUpSymbol(Value *tree, Frame *frame) {
 	if(frame == NULL) {
@@ -276,6 +275,9 @@ Value *evalLambda(Value *args, Frame *frame) {
 	return lambdaValue;
 }
 
+
+// APPLY FUNCTION
+
 Value *apply(Value *function, Value *args) {
 	if (function->type == PRIMITIVE_TYPE) {
 		return (function->pf)(args);
@@ -308,6 +310,9 @@ Value *apply(Value *function, Value *args) {
 
 	return eval(function->closure.body, curFrame);
 }
+
+
+// MAIN EVALUATION FUNCTION
 
 Value *eval(Value *expr, Frame *frame) {
 	switch(expr->type) {
@@ -383,7 +388,7 @@ Value *eval(Value *expr, Frame *frame) {
 			return NULL;  // to make the compiler happy
 		}
 		default:
-			printf("Invalid token for evaluation\n");
+			printf("Invalid token (type %d) for evaluation\n", expr->type);
 			texit(1);
 			return NULL;  // To make the compiler happy
 	}
