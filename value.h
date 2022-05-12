@@ -1,6 +1,8 @@
 #ifndef VALUE_H
 #define VALUE_H
 
+#include <stdbool.h>
+
 typedef enum {
    PTR_TYPE,
    INT_TYPE,
@@ -32,7 +34,8 @@ struct Value {
          struct Value *args;
 		 struct Value *body;
 		 struct Frame *frame;
-      } closure;
+         bool variadic;
+	  } closure;
 	  struct Value *(*pf)(struct Value *);
    };
 };

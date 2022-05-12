@@ -177,7 +177,7 @@ Value *evalQuote(Value *args) {
 	return car(args);
 }
 
-Value *evalLet(Value *args, Frame *frame) {
+Value *evalLet(Value *args, Frame *frame, int type) { // type == 0 let, type == 1 letrec type == 2 let*
 	Frame *newFrame = talloc(sizeof(Frame));
 	newFrame->bindings = makeNull();
 	newFrame->parent = frame;
@@ -194,7 +194,12 @@ Value *evalLet(Value *args, Frame *frame) {
 			texit(1);
 		}
 
-		Value *result = eval(car(cdr(car(binding))), frame);
+		Value *result;
+		if(type == 0 || type == 2) {
+			result = eval(car(cdr(car(binding))), frame);
+		} else {
+			result = eval(car(cdr(car(binding))), newFrame);
+		}
 		Value *symbol = car(car(binding));
 		if (symbol->type != SYMBOL_TYPE) {
 			printf("Let must define symbol types only\n");
@@ -204,6 +209,12 @@ Value *evalLet(Value *args, Frame *frame) {
 		newFrame->bindings = cons(newBinding, newFrame->bindings);
 
 		binding = cdr(binding);
+		if(type == 2) {
+			frame = newFrame;
+			newFrame = talloc(sizeof(Frame));
+			newFrame->bindings = makeNull();
+			newFrame->parent = frame;
+		}
 	}
 
 	return eval(car(cdr(args)), newFrame);
@@ -251,24 +262,30 @@ Value *evalLambda(Value *args, Frame *frame) {
 	lambdaValue->type = CLOSURE_TYPE;
 
 	Value *param = car(args);
-	if(param->type != CONS_TYPE && param->type != NULL_TYPE) {
+	
+	if(param->type != CONS_TYPE && param->type != SYMBOL_TYPE && param->type != NULL_TYPE) {
 		printf("Invalid lambda paramaters, needs to be a list of symbols\n");
 		texit(1);
+	} 
+	else if(param->type == SYMBOL_TYPE) {
+		lambdaValue->closure.variadic = true;
 	}
-
-	Value *iter;
-	while(!isNull(param)) {
-		if(car(param)->type != SYMBOL_TYPE) {
-			printf("Invalid lambda paramaters, needs to be a list of symbols\n");
-        	texit(1);
+	else {
+		lambdaValue->closure.variadic = false;
+	
+		Value *iter;
+		while(!isNull(param)) {
+			if(car(param)->type != SYMBOL_TYPE) {
+				printf("Invalid lambda paramaters, needs to be a list of symbols\n");
+	       		texit(1);
+			}
+			if (contains(cdr(param), car(param))) {
+				printf("Invalid lambda parameters, cannot have more than one symbol of the same type.\n");
+				texit(1);
+			}
+			param = cdr(param);
 		}
-		if (contains(cdr(param), car(param))) {
-			printf("Invalid lambda parameters, cannot have more than one symbol of the same type.\n");
-			texit(1);
-		}
-		param = cdr(param);
 	}
-
 	lambdaValue->closure.args = car(args);
 	lambdaValue->closure.body = car(cdr(args));
 	lambdaValue->closure.frame = frame;
@@ -292,22 +309,27 @@ Value *apply(Value *function, Value *args) {
 	curFrame->bindings = makeNull();
 
 	Value *param = function->closure.args;
-	while(!isNull(param)) {
-		if(isNull(args)) {
-			printf("Invalid function call, not enough arguments\n");
+	if(function->closure.variadic) {
+		Value *binding = cons(param, args);
+		curFrame->bindings = cons(binding, curFrame->bindings);
+	}
+	else {
+		while(!isNull(param)) {
+			if(isNull(args)) {
+				printf("Invalid function call, not enough arguments\n");
+				texit(1);
+			}
+			Value *binding = cons(car(param), car(args));
+			curFrame->bindings = cons(binding, curFrame->bindings);
+	
+			param = cdr(param);
+			args = cdr(args);
+		}
+		if(!isNull(args)) {
+			printf("Invalid function call, too many arguments\n");
 			texit(1);
 		}
-		Value *binding = cons(car(param), car(args));
-		curFrame->bindings = cons(binding, curFrame->bindings);
-
-		param = cdr(param);
-		args = cdr(args);
 	}
-	if(!isNull(args)) {
-		printf("Invalid function call, too many arguments\n");
-		texit(1);
-	}
-
 	return eval(function->closure.body, curFrame);
 }
 
@@ -358,8 +380,17 @@ Value *eval(Value *expr, Frame *frame) {
 			}
 
 			else if (!strcmp(first->s, "let")) {
-				return evalLet(args, frame);
+				return evalLet(args, frame, 0);
 			}
+
+			else if (!strcmp(first->s, "letrec")) {
+				return evalLet(args, frame, 1);
+			}
+
+			else if (!strcmp(first->s, "let*")) {
+				return evalLet(args, frame, 2);
+			}
+
 			else if(!strcmp(first->s, "define")) {
 				return evalDefine(args, frame);
 			}
