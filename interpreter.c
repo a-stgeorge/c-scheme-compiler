@@ -66,6 +66,109 @@ Value *primitiveAdd(Value *args) {
 	return returnValue;
 }
 
+Value *primitiveMultiply(Value *args) {
+    double product = 1;
+    bool hasDoubles = false;
+    // error checking on args, a list of inputs
+    // compute the result as a single value
+	Value *cur = args;
+    while (!isNull(cur)) {
+        if (car(cur)->type == INT_TYPE) {
+            product *= car(cur)->i;
+        } else if (car(cur)->type == DOUBLE_TYPE) {
+            hasDoubles = true;
+            product *= car(cur)->d;
+        } else {
+            printf("* can only take in numbers\n");
+            texit(1);
+        }
+        cur = cdr(cur);
+    }
+    Value *returnValue = makeNull();
+    if (hasDoubles) {
+        returnValue->type = DOUBLE_TYPE;
+        returnValue->d = product;
+    } else {
+        returnValue->type = INT_TYPE;
+        returnValue->i = (int) product;
+    }
+    return returnValue;
+}
+
+Value *primitiveSubtract(Value *args) {
+    double remainder = 0;
+    bool hasDoubles = false;
+    // error checking on args, a list of inputs
+    // compute the result as a single value
+    Value *cur = args;
+	if (length(cur) > 1) {
+		if (car(cur)->type == INT_TYPE) {
+	            remainder = car(cur)->i;
+	        } else if (car(cur)->type == DOUBLE_TYPE) {
+	            hasDoubles = true;
+	            remainder = car(cur)->d;
+	        } else {
+	            printf("- can only take in numbers\n");
+	            texit(1);
+	        }
+	        cur = cdr(cur);
+	}
+    while (!isNull(cur)) {
+        if (car(cur)->type == INT_TYPE) {
+            remainder -= car(cur)->i;
+        } else if (car(cur)->type == DOUBLE_TYPE) {
+            hasDoubles = true;
+            remainder -= car(cur)->d;
+        } else {
+            printf("- can only take in numbers\n");
+            texit(1);
+        }
+        cur = cdr(cur);
+    }
+    Value *returnValue = makeNull();
+    if (hasDoubles) {
+        returnValue->type = DOUBLE_TYPE;
+        returnValue->d = remainder;
+    } else {
+        returnValue->type = INT_TYPE;
+        returnValue->i = (int) remainder;
+    }
+    return returnValue;
+}
+
+Value *primitiveDivide(Value *args) {
+    double quotient = 1;
+    // error checking on args, a list of inputs
+    //compute the result as a single value
+    Value *cur = args;
+    if (length(cur) > 1) {
+        if (car(cur)->type == INT_TYPE) {
+                quotient = car(cur)->i;
+            } else if (car(cur)->type == DOUBLE_TYPE) {
+                quotient = car(cur)->d;
+            } else {
+                printf("/ can only take in numbers\n");
+                texit(1);
+            }
+            cur = cdr(cur);
+    }
+    while (!isNull(cur)) {
+        if (car(cur)->type == INT_TYPE) {
+            quotient /= car(cur)->i;
+        } else if (car(cur)->type == DOUBLE_TYPE) {
+            quotient /= car(cur)->d;
+        } else {
+            printf("/ can only take in numbers\n");
+            texit(1);
+        }
+        cur = cdr(cur);
+    }
+    Value *returnValue = makeNull();
+    returnValue->type = DOUBLE_TYPE;
+    returnValue->d = quotient;
+    return returnValue;
+}
+
 Value *primitiveIsNull(Value *args) {
 	if(length(args) != 1) {
 		printf("null? can only have one argument\n");
@@ -116,6 +219,61 @@ Value *primitiveCons(Value *args) {
 	return cons(car(args), car(cdr(args)));
 }
 
+Value *primitiveIsEq(Value *args) {
+	bool isEq = true;
+	if(length(args) < 2) {
+        printf("Eq? must have at least 2 arguments.\n");
+        texit(1);
+    }
+	Value *first = car(args);
+	Value *cur = cdr(args);
+	while(!isNull(cur)) {
+		if(car(cur) != first) {
+			isEq = false;
+		}
+	}
+	
+	Value *returnValue = makeNull();
+    returnValue->type = BOOL_TYPE;
+    if(isEq) {
+		returnValue->s = "#t";
+	}
+	else {
+		returnValue->s = "#f";
+	}
+    return returnValue;
+}
+
+Value *primitiveIsPair(Value *args) {
+	if(length(args) != 1) {
+		printf("pair? must have exactly one argument.\n");
+		texit(1);
+	}
+	Value *returnValue = makeNull();
+	returnValue->type = BOOL_TYPE;
+	if(length(car(args)) >= 2) {
+		returnValue->s = "#t";
+	}
+	else {
+		returnValue->s = "#f";
+	}
+	return returnValue;
+}
+
+Value *apply(Value *function, Value *args);
+
+Value *primitiveApply(Value *args) {
+	if(length(args) != 2) {
+        printf("apply must have exactly two arguments.\n");
+        texit(1);
+    }
+	if(car(cdr(args))->type != CONS_TYPE) {
+		printf("The last argument of apply must be a list.\n");
+		texit(1);
+	}
+	return apply(car(args), car(cdr(args)));
+}
+
 
 // MAIN INTERPRET FUNCITON
 void interpret(Value *tree) {
@@ -123,10 +281,16 @@ void interpret(Value *tree) {
 	parentFrame->bindings = makeNull();
 	parentFrame->parent = NULL;
 	bind("+", primitiveAdd, parentFrame);
+    bind("*", primitiveMultiply, parentFrame);
+    bind("-", primitiveSubtract, parentFrame);
+    bind("/", primitiveDivide, parentFrame);
 	bind("null?", primitiveIsNull, parentFrame);
 	bind("car", primitiveCar, parentFrame);
 	bind("cdr", primitiveCdr, parentFrame);
 	bind("cons", primitiveCons, parentFrame);
+	bind("eq?", primitiveIsEq, parentFrame);
+	bind("pair?", primitiveIsPair, parentFrame);
+	bind("apply", primitiveApply, parentFrame);
 
 	while(!isNull(tree)) {
 		Value *result = eval(car(tree), parentFrame);
