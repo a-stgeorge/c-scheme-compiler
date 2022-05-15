@@ -635,7 +635,6 @@ Value *eval(Value *expr, Frame *frame) {
 		case CLOSURE_TYPE:
 			return expr;
 		case SYMBOL_TYPE:
-			display(expr);
 			return lookUpSymbol(expr, frame);
 		case CONS_TYPE: {
 			Value *first = car(expr);
