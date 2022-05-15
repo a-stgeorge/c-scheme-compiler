@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "interpreter.h"
+#include <math.h>
 
 // helper function that determines if list of values list contains a particular symbol symb.
 static bool contains(Value *list, Value *symb) {
@@ -169,6 +170,46 @@ Value *primitiveDivide(Value *args) {
     return returnValue;
 }
 
+Value *libraryMod(Value *args) {
+    if (length(args) != 2) {
+		printf("modulo must be given 2 arguments\n");
+		texit(1);
+	}
+	if(car(args)->type == DOUBLE_TYPE) {
+		if(floor(car(args)->i) == car(args)->i) {
+			car(args)->type = INT_TYPE;
+			car(args)->i = car(args)->d;
+		}
+		else {
+			printf("expected integer values and double values were received\n");
+			texit(1);
+		}
+	}
+	if(car(cdr(args))->type == DOUBLE_TYPE) {
+		if(floor(car(cdr(args))->d) == car(cdr(args))->d) {
+			car(cdr(args))->type = INT_TYPE;
+			car(cdr(args))->i = car(cdr(args))->d;
+		}
+		else {
+			printf("expected integer values and double values were received\n");
+			texit(1);
+		}
+	}
+	if (car(args)->type != INT_TYPE || car(cdr(args))->type != INT_TYPE) {
+		printf("modulo can only take in integers\n");
+		texit(1);
+	}
+	if(car(cdr(args))->i == 0) {
+		printf("Cannot divide by 0\n");
+		texit(1);
+	}
+	
+    Value *returnValue = makeNull();
+    returnValue->type = INT_TYPE;
+    returnValue->i = car(args)->i % car(cdr(args))->i;
+    return returnValue;
+}
+
 Value *primitiveIsNull(Value *args) {
 	if(length(args) != 1) {
 		printf("null? can only have one argument\n");
@@ -217,6 +258,42 @@ Value *primitiveCons(Value *args) {
 	}
 
 	return cons(car(args), car(cdr(args)));
+}
+
+Value *primitiveLessOrEq(Value *args) {
+	if(length(args) != 2) {
+		printf("<= must have exactly 2 arguments\n");
+		texit(1);
+	}
+	if((car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) || (car(cdr(args))->type != INT_TYPE && car(cdr(args))->type != DOUBLE_TYPE)) {
+		printf("Invalid arguments, <= handles numeric comparisons only\n");
+		texit(1);
+	}
+	
+	double arg1 = 0;
+	double arg2 = 0;
+	if(car(args)->type == DOUBLE_TYPE) {
+		arg1 = car(args)->d;
+	}
+	else {
+		arg1 = car(args)->i;
+	}
+	if(car(cdr(args))->type == DOUBLE_TYPE) {
+		arg2 = car(cdr(args))->d;
+	}
+	else {
+		arg2 = car(cdr(args))->i;
+	}
+	
+	Value* returnValue = makeNull();
+	returnValue->type = BOOL_TYPE;
+	if(car(args) <= car(cdr(args))) {
+		returnValue->s = "#t";
+	}
+	else {
+		returnValue->s = "#f";
+	}
+	return returnValue;
 }
 
 Value *primitiveIsEq(Value *args) {
@@ -274,6 +351,42 @@ Value *primitiveApply(Value *args) {
 	return apply(car(args), car(cdr(args)));
 }
 
+Value *libraryNEqual (Value* args) {
+	if(length(args) != 2) {
+		printf("= must have exactly 2 arguments\n");
+		texit(1);
+	}
+	if((car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) || (car(cdr(args))->type != INT_TYPE && car(cdr(args))->type != DOUBLE_TYPE)) {
+		printf("Invalid arguments, = handles numeric comparisons only\n");
+		texit(1);
+	}
+	
+	double arg1 = 0;
+	double arg2 = 0;
+	if(car(args)->type == DOUBLE_TYPE) {
+		arg1 = car(args)->d;
+	}
+	else {
+		arg1 = car(args)->i;
+	}
+	if(car(cdr(args))->type == DOUBLE_TYPE) {
+		arg2 = car(cdr(args))->d;
+	}
+	else {
+		arg2 = car(cdr(args))->i;
+	}
+	
+	Value *returnValue = makeNull();
+	returnValue->type = BOOL_TYPE;
+	if(arg1 == arg2) {
+		returnValue->s = "#t";
+	}
+	else {
+		returnValue->s = "#f";
+	}
+	return returnValue;
+}
+
 
 // MAIN INTERPRET FUNCITON
 void interpret(Value *tree) {
@@ -284,6 +397,8 @@ void interpret(Value *tree) {
     bind("*", primitiveMultiply, parentFrame);
     bind("-", primitiveSubtract, parentFrame);
     bind("/", primitiveDivide, parentFrame);
+	bind("<=", primitiveLessOrEq, parentFrame);
+	bind("modulo", libraryMod, parentFrame);
 	bind("null?", primitiveIsNull, parentFrame);
 	bind("car", primitiveCar, parentFrame);
 	bind("cdr", primitiveCdr, parentFrame);
@@ -291,6 +406,7 @@ void interpret(Value *tree) {
 	bind("eq?", primitiveIsEq, parentFrame);
 	bind("pair?", primitiveIsPair, parentFrame);
 	bind("apply", primitiveApply, parentFrame);
+	bind("=", libraryNEqual, parentFrame);
 
 	while(!isNull(tree)) {
 		Value *result = eval(car(tree), parentFrame);
@@ -320,17 +436,27 @@ Value *lookUpSymbol(Value *tree, Frame *frame) {
 }
 
 Value *evalIf(Value *args, Frame *frame) {
-	if (length(args) != 3) {
-		printf("Invalid if statement, must have 3 arguments\n");
+	if (length(args) != 3 && length(args) != 2) {
+		printf("Invalid if statement, must have 2 or 3 arguments\n");
 		texit(1);
 	}
 
 	Value *cond = eval(car(args), frame);
-	if (cond->type == BOOL_TYPE && !strcmp(cond->s, "#f")) {
-		return eval(car(cdr(cdr(args))), frame);
-	}
+	if(length(args) == 3) {
+		if (cond->type == BOOL_TYPE && !strcmp(cond->s, "#f")) {
+			return eval(car(cdr(cdr(args))), frame);
+		}
 
-	return eval(car(cdr(args)), frame);
+		return eval(car(cdr(args)), frame);
+	}
+	else {
+		if(cond->type == BOOL_TYPE && !strcmp(cond->s, "#f")) {
+			Value *returnValue = makeNull();
+			returnValue->type = VOID_TYPE;
+			return returnValue;
+		}
+		return eval(car(cdr(args)), frame);
+	}
 }
 
 Value *evalQuote(Value *args) {
@@ -509,6 +635,7 @@ Value *eval(Value *expr, Frame *frame) {
 		case CLOSURE_TYPE:
 			return expr;
 		case SYMBOL_TYPE:
+			display(expr);
 			return lookUpSymbol(expr, frame);
 		case CONS_TYPE: {
 			Value *first = car(expr);
@@ -576,8 +703,6 @@ Value *eval(Value *expr, Frame *frame) {
 				newArgs = reverse(newArgs);
                 return apply(car(newArgs), cdr(newArgs));
 
-				//printf("Function %s not recognized\n", first->s);
-				//texit(1);
 			}
 
 			return NULL;  // to make the compiler happy
