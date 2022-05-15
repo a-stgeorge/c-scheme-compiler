@@ -423,9 +423,9 @@ Value *libraryEqual(Value *args) {
 		returnValue->s = "#f";
 	}
 	else {
-		/*if(equal(arg1, arg2)) {
+		if(equalValues(arg1, arg2)) {
 			returnValue->s = "#t";
-		}*/
+		}
 	}
 	return returnValue;
 }
