@@ -643,6 +643,61 @@ Value *evalBegin(Value *args, Frame *frame) {
 	return result;
 }
 
+Value *evalAnd(Value *args, Frame *frame) {
+	Value *cur = args;
+	Value *result = makeNull();
+	result->type = BOOL_TYPE;
+
+	if(cur->type != CONS_TYPE && cur->type != NULL_TYPE) {
+		printf("Invalid input parameters\n");
+		texit(1);
+	}
+	
+	if(cur->type == NULL_TYPE) {
+		result->s = "#t";
+		return result;
+	}
+	
+	while(cur->type == CONS_TYPE) {
+		Value *cond = eval(car(cur), frame);
+		if(cond->type == BOOL_TYPE && !strcmp(cond->s, "#f")) {
+			result->s = "#f";
+			return result;
+		}
+		cur = cdr(cur);
+	}
+	result->s = "#t";
+	return result;
+}
+
+Value *evalOr(Value *args, Frame *frame) {
+	Value *cur = args;
+	Value *result = makeNull();
+	result->type = BOOL_TYPE;
+
+	if(cur->type != CONS_TYPE && cur->type != NULL_TYPE) {
+		printf("Invalid input parameters\n");
+		texit(1);
+	}
+	
+	if(cur->type == NULL_TYPE) {
+		result->s = "#t";
+		return result;
+	}
+	
+	while(cur->type == CONS_TYPE) {
+		Value *cond = eval(car(cur), frame);
+		if(cond->type == BOOL_TYPE && !strcmp(cond->s, "#t")) {
+			result->s = "#t";
+			return result;
+		}
+		cur = cdr(cur);
+	}
+	result->s = "#f";
+	return result;
+}
+
+
 
 // ========== APPLY FUNCTION ==========
 
@@ -752,6 +807,14 @@ Value *eval(Value *expr, Frame *frame) {
 
 			else if (!strcmp(first->s, "begin")) {
 				return evalBegin(args, frame);
+			}
+			
+			else if(!strcmp(first->s, "and")) {
+				return evalAnd(args, frame);
+			}
+			
+			else if(!strcmp(first->s, "or")) {
+				return evalOr(args, frame);
 			}
 
 			// ... further special forms here ...
