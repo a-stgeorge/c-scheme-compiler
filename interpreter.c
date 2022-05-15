@@ -387,6 +387,47 @@ Value *libraryNEqual (Value* args) {
 	return returnValue;
 }
 
+Value *libraryEqual(Value *args) {
+	if(length(args) != 2) {
+		printf("equal? must have exactly 2 arguments\n");
+		texit(1);
+	}
+	
+	Value *arg1 = car(args);
+	Value *arg2 = car(cdr(args));
+	
+	Value *returnValue = makeNull();
+	returnValue->type = BOOL_TYPE;
+	returnValue->s = "#t";
+	
+	if(arg1->type == CONS_TYPE && arg2->type == CONS_TYPE) {
+		if(length(arg1) != length(arg2)) {
+			returnValue->s = "#f";
+		}
+		Value *cur1 = arg1;
+		Value *cur2 = arg2;
+		while(cur1) {
+			Value *result = libraryEqual(cons(cur1, cur2));
+			if(!strcmp("#f", result->s)) {
+				returnValue->s = "#f";
+				return returnValue;
+			}
+			cur1 = cdr(cur1);
+			cur2 = cdr(cur2);
+		}
+		returnValue->s = "#t";
+		return returnValue;
+	} else if(arg1->type == CONS_TYPE || arg2->type == CONS_TYPE) {
+		returnValue->s = "#f";
+	}
+	else {
+		/*if(equal(arg1, arg2)) {
+			returnValue->s = "#t";
+		}*/
+	}
+	return returnValue;
+}
+
 
 // MAIN INTERPRET FUNCITON
 void interpret(Value *tree) {
@@ -407,6 +448,7 @@ void interpret(Value *tree) {
 	bind("pair?", primitiveIsPair, parentFrame);
 	bind("apply", primitiveApply, parentFrame);
 	bind("=", libraryNEqual, parentFrame);
+	bind("equal?", libraryEqual, parentFrame);
 
 	while(!isNull(tree)) {
 		Value *result = eval(car(tree), parentFrame);
