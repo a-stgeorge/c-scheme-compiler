@@ -36,7 +36,9 @@ void bind(char *name, Value *(*function)(Value *), Frame *frame) {
 	frame->bindings = cons(binding, frame->bindings);
 }
 
-// PRIMITIVE FUNCTION DEFINITIONS
+
+// ========== PRIMITIVE FUNCTION DEFINITIONS ==========
+
 Value *primitiveAdd(Value *args) {
 	double sum = 0;
 	bool hasDoubles = false;
@@ -275,7 +277,8 @@ Value *primitiveApply(Value *args) {
 }
 
 
-// MAIN INTERPRET FUNCITON
+// ========== MAIN INTERPRET FUNCITON ==========
+
 void interpret(Value *tree) {
 	Frame *parentFrame = talloc(sizeof(Frame));
 	parentFrame->bindings = makeNull();
@@ -302,7 +305,7 @@ void interpret(Value *tree) {
 }
 
 
-// MAIN HELPER FUNCTIONS
+// ========== SPECIAL FORMS HELPER FUNCTIONS ==========
 
 Value *lookUpSymbol(Value *tree, Frame *frame) {
 	if(frame == NULL) {
@@ -456,8 +459,24 @@ Value *evalLambda(Value *args, Frame *frame) {
 	return lambdaValue;
 }
 
+Value *evalBegin(Value *args, Frame *frame) {
+	Value *cur = args;
+	Value *result = makeNull();
+	result-> type = VOID_TYPE;
+	while (cur->type == CONS_TYPE) {
+		result = eval(car(cur), frame);
+		cur = cdr(cur);
+	}
+	if (!isNull(cur)) {
+		printf("Invalid arguments for for begin\n");
+		texit(1);
+	}
 
-// APPLY FUNCTION
+	return result;
+}
+
+
+// ========== APPLY FUNCTION ==========
 
 Value *apply(Value *function, Value *args) {
 	if (function->type == PRIMITIVE_TYPE) {
@@ -498,7 +517,7 @@ Value *apply(Value *function, Value *args) {
 }
 
 
-// MAIN EVALUATION FUNCTION
+// ========== MAIN EVALUATION FUNCTION ==========
 
 Value *eval(Value *expr, Frame *frame) {
 	switch(expr->type) {
@@ -555,12 +574,16 @@ Value *eval(Value *expr, Frame *frame) {
 				return evalLet(args, frame, 2);
 			}
 
-			else if(!strcmp(first->s, "define")) {
+			else if (!strcmp(first->s, "define")) {
 				return evalDefine(args, frame);
 			}
 
-			else if(!strcmp(first->s, "lambda")) {
+			else if (!strcmp(first->s, "lambda")) {
 				return evalLambda(args, frame);
+			}
+
+			else if (!strcmp(first->s, "begin")) {
+				return evalBegin(args, frame);
 			}
 
 			// ... further special forms here ...

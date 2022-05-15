@@ -107,6 +107,32 @@ int length(Value *value) {
 	return size;
 }
 
+// Function that checks recursively if two Values are eqaul.
+bool equalValues(Value *val1, Value *val2) {
+	if (val1->type != val2->type) {
+		return false;
+	}
+	switch (val1->type) {
+	case PTR_TYPE:
+		return val1->p == val2->p;
+	case INT_TYPE:
+		return val1->i == val2->i;
+	case DOUBLE_TYPE:
+		return val1->d == val2->d;
+	case STR_TYPE:
+	case BOOL_TYPE:
+	case SYMBOL_TYPE:
+		return val1->s == val2->s;
+	case OPEN_TYPE:
+	case CLOSE_TYPE:
+	case NULL_TYPE:
+		return true;
+	default:
+		// missing some implementations
+		return false;
+	}
+}
+
 // Function that takes in list, a linked list, and returns the list in reverse
 // order as a linked list. The list returned is a full copy (no remaining pointers)
 // of the original input list.

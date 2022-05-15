@@ -44,6 +44,11 @@ bool isNull(Value *value);
 int length(Value *value);
 
 /*
+ * Recursively checks to see if two values are equal.
+ */
+bool equalValues(Value *val1, Value *val2);
+
+/*
  * Create a new linked list whose entries correspond to the given list's
  * entries, but in reverse order.  The resulting list is a shallow copy of the
  * original: that is, stored data within the linked list should NOT be
