@@ -104,6 +104,10 @@ Value *primitiveSubtract(Value *args) {
     // error checking on args, a list of inputs
     // compute the result as a single value
     Value *cur = args;
+	if(length(cur) == 0) {
+		printf("- must take in at least one argument\n");
+		texit(1);
+	}
 	if (length(cur) > 1) {
 		if (car(cur)->type == INT_TYPE) {
 	            remainder = car(cur)->i;
@@ -144,22 +148,38 @@ Value *primitiveDivide(Value *args) {
     // error checking on args, a list of inputs
     //compute the result as a single value
     Value *cur = args;
-    if (length(cur) > 1) {
+	if (length(cur) == 0) {
+		printf("/ must be given at least 1 argument\n");
+		texit(1);
+	}
+    else if (length(cur) > 1) {
         if (car(cur)->type == INT_TYPE) {
-                quotient = car(cur)->i;
-            } else if (car(cur)->type == DOUBLE_TYPE) {
-                quotient = car(cur)->d;
-            } else {
-                printf("/ can only take in numbers\n");
-                texit(1);
-            }
-            cur = cdr(cur);
+            quotient = car(cur)->i;
+        } else if (car(cur)->type == DOUBLE_TYPE) {
+            quotient = car(cur)->d;
+        } else {
+            printf("/ can only take in numbers\n");
+            texit(1);
+        }
+        cur = cdr(cur);
     }
     while (!isNull(cur)) {
         if (car(cur)->type == INT_TYPE) {
-            quotient /= car(cur)->i;
+			if(car(cur)->i != 0) {
+            	quotient /= car(cur)->i;
+			}
+			else {
+				printf("Cannot divide by 0\n");
+				texit(1);
+			}
         } else if (car(cur)->type == DOUBLE_TYPE) {
-            quotient /= car(cur)->d;
+			if(car(cur)->d != 0) {
+            	quotient /= car(cur)->d;
+			}
+			else {
+				printf("Cannot divide by 0\n");
+				texit(1);
+			}
         } else {
             printf("/ can only take in numbers\n");
             texit(1);
@@ -262,59 +282,56 @@ Value *primitiveCons(Value *args) {
 	return cons(car(args), car(cdr(args)));
 }
 
-Value *primitiveLessOrEq(Value *args) {
-	if(length(args) != 2) {
-		printf("<= must have exactly 2 arguments\n");
-		texit(1);
-	}
-	if((car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) || (car(cdr(args))->type != INT_TYPE && car(cdr(args))->type != DOUBLE_TYPE)) {
-		printf("Invalid arguments, <= handles numeric comparisons only\n");
-		texit(1);
-	}
-	
-	double arg1 = 0;
-	double arg2 = 0;
-	if(car(args)->type == DOUBLE_TYPE) {
-		arg1 = car(args)->d;
-	}
-	else {
-		arg1 = car(args)->i;
-	}
-	if(car(cdr(args))->type == DOUBLE_TYPE) {
-		arg2 = car(cdr(args))->d;
-	}
-	else {
-		arg2 = car(cdr(args))->i;
-	}
-	
-	Value* returnValue = makeNull();
+Value *primitiveLessOrEq(Value *args) {	
+	Value *cur = args;
+	double prevArg;
+	Value *returnValue = makeNull();
 	returnValue->type = BOOL_TYPE;
-	if(car(args) <= car(cdr(args))) {
-		returnValue->s = "#t";
+	returnValue->s = "#t";
+	if(length(cur) <= 1) {
+		return returnValue;
 	}
 	else {
-		returnValue->s = "#f";
+		if(car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) {
+			printf("Invalid arguments, <= handles numeric comparisons only\n");
+			texit(1);
+		}
+		if(car(cur)->type == DOUBLE_TYPE) {
+			prevArg = car(cur)->d;
+		}
+		else {
+			prevArg = car(cur)->i;
+		}
+		cur = cdr(cur);
+		while(!isNull(cur)) {
+			double curArg;
+			if(car(cur)->type == DOUBLE_TYPE) {
+				curArg = car(cur)->d;
+			}
+			else {
+				curArg = car(cur)->i;
+			}
+			
+			if(prevArg > curArg) {
+				returnValue->s = "#f";
+			}
+			prevArg = curArg;
+			cur = cdr(cur);
+		}
+		return returnValue;
 	}
-	return returnValue;
 }
 
 Value *primitiveIsEq(Value *args) {
 	bool isEq = true;
-	if(length(args) < 2) {
-        printf("Eq? must have at least 2 arguments.\n");
+	if(length(args) != 2) {
+        printf("Eq? must have exactly 2 arguments.\n");
         texit(1);
     }
-	Value *first = car(args);
-	Value *cur = cdr(args);
-	while(!isNull(cur)) {
-		if(car(cur) != first) {
-			isEq = false;
-		}
-	}
 	
 	Value *returnValue = makeNull();
     returnValue->type = BOOL_TYPE;
-    if(isEq) {
+    if(car(args) == car(cdr(args))) {
 		returnValue->s = "#t";
 	}
 	else {
