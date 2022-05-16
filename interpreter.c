@@ -354,7 +354,7 @@ Value *primitiveIsPair(Value *args) {
 	}
 	Value *returnValue = makeNull();
 	returnValue->type = BOOL_TYPE;
-	if(length(car(args)) >= 2) {
+	if(car(args)->type == CONS_TYPE) {
 		returnValue->s = "#t";
 	}
 	else {
@@ -366,8 +366,8 @@ Value *primitiveIsPair(Value *args) {
 Value *apply(Value *function, Value *args);
 
 Value *primitiveApply(Value *args) {
-	if(length(args) != 2) {
-        printf("apply must have exactly two arguments.\n");
+	if(length(args) >= 2) {
+        printf("apply must have at least two arguments.\n");
         texit(1);
     }
 	if(car(cdr(args))->type != CONS_TYPE) {
@@ -378,38 +378,52 @@ Value *primitiveApply(Value *args) {
 }
 
 Value *libraryNEqual (Value* args) {
-	if(length(args) != 2) {
-		printf("= must have exactly 2 arguments\n");
+	Value *returnValue = makeNull();
+	returnValue->type = BOOL_TYPE;
+	returnValue->s = "#t";
+	if(length(args) == 0) {
+		printf("= must have at least 1 argument\n");
 		texit(1);
 	}
-	if((car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) 
-				|| (car(cdr(args))->type != INT_TYPE && car(cdr(args))->type != DOUBLE_TYPE)) {
+	else if(length(args) == 1) {
+		return returnValue;
+	}
+	
+	Value *cur = args;
+	double prevArg, curArg;
+
+	// set prevArg
+	if(car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) {
 		printf("Invalid arguments, = handles numeric comparisons only\n");
 		texit(1);
 	}
-
-	double arg1 = 0;
-	double arg2 = 0;
 	if(car(args)->type == DOUBLE_TYPE) {
-		arg1 = car(args)->d;
+		prevArg = car(args)->d;
 	}
-	else {
-		arg1 = car(args)->i;
+	else if(car(args)->type == INT_TYPE) {
+		prevArg = car(args)->i;
 	}
-	if(car(cdr(args))->type == DOUBLE_TYPE) {
-		arg2 = car(cdr(args))->d;
-	}
-	else {
-		arg2 = car(cdr(args))->i;
-	}
+	cur = cdr(cur);
 	
-	Value *returnValue = makeNull();
-	returnValue->type = BOOL_TYPE;
-	if(arg1 == arg2) {
-		returnValue->s = "#t";
-	}
-	else {
-		returnValue->s = "#f";
+	// Set curArg and compare to prevArg
+	while(!isNull(cur)) {
+		if(car(cur)->type != INT_TYPE && car(cur)->type != DOUBLE_TYPE) {
+			printf("Invalid arguments, = handles numeric comparisons only\n");
+			texit(1);
+		}
+		if(car(cur)->type == DOUBLE_TYPE) {
+			curArg = car(cur)->d;
+		}
+		else if(car(cur)->type == INT_TYPE) {
+			curArg = car(cur)->i;
+		}
+		
+		if(prevArg != curArg) {
+			returnValue->s = "#f";
+			return returnValue;
+		}
+		prevArg = curArg;
+		cur = cdr(cur);
 	}
 	return returnValue;
 }
@@ -436,9 +450,9 @@ Value *libraryEqual(Value *args) {
 }
 
 
-// ========== MAIN INTERPRET FUNCITON ==========
+// ========== MAIN INTERPRET FUNCITONS ==========
 
-void interpret(Value *tree) {
+void *interpret(Value *tree) {
 	Frame *parentFrame = talloc(sizeof(Frame));
 	parentFrame->bindings = makeNull();
 	parentFrame->parent = NULL;
@@ -465,6 +479,20 @@ void interpret(Value *tree) {
 		}
 		tree = cdr(tree);
 	}
+
+	return parentFrame;
+}
+
+void *interpretUseFrame(Value *tree, Frame *parentFrame) { 	// interpret function for (load ...)
+	while(!isNull(tree)) {									// so no need to set up parent frame
+		Value *result = eval(car(tree), parentFrame);
+		if (result->type != VOID_TYPE) {
+			printTree(result);
+		}
+		tree = cdr(tree);
+	}
+
+	return parentFrame;
 }
 
 
@@ -517,8 +545,8 @@ Value *evalQuote(Value *args) {
 	return car(args);
 }
 
-Value *evalLet(Value *args, Frame *frame, int type) { // type == 0 let, type == 1 letrec type == 2 let*
-	Frame *newFrame = talloc(sizeof(Frame));
+Value *evalLet(Value *args, Frame *frame, int type) { 	// type == 0: let, type == 1: letrec,	
+	Frame *newFrame = talloc(sizeof(Frame));			// and type == 2: let*
 	newFrame->bindings = makeNull();
 	newFrame->parent = frame;
 
@@ -702,6 +730,26 @@ Value *evalOr(Value *args, Frame *frame) {
 	return result;
 }
 
+Value *evalLoad(Value *args, Frame *frame) { // (load ...) extension option
+	if (length(args) != 1 || car(args)->type != STR_TYPE) {
+		printf("load must have exactly one string argument\n");
+		texit(1);
+	}
+	
+	FILE* fileStream = fopen(car(args)->s, "r");
+	if (fileStream == NULL) {
+		printf("Cannot open file %s\n", car(args)->s);
+		texit(0);
+	}
+	Value *list = tokenize(fileStream);
+	Value *tree = parse(list);
+	interpretUseFrame(tree, frame);		
+
+	Value *returnVal = makeNull();
+	returnVal->type = VOID_TYPE;
+	return returnVal;
+}
+
 
 
 // ========== APPLY FUNCTION ==========
@@ -814,12 +862,16 @@ Value *eval(Value *expr, Frame *frame) {
 				return evalBegin(args, frame);
 			}
 			
-			else if(!strcmp(first->s, "and")) {
+			else if (!strcmp(first->s, "and")) {
 				return evalAnd(args, frame);
 			}
 			
-			else if(!strcmp(first->s, "or")) {
+			else if (!strcmp(first->s, "or")) {
 				return evalOr(args, frame);
+			}
+
+			else if (!strcmp(first->s, "load")) {
+				return evalLoad(args, frame);
 			}
 
 			// ... further special forms here ...
@@ -837,7 +889,6 @@ Value *eval(Value *expr, Frame *frame) {
 
 			}
 
-			return NULL;  // to make the compiler happy
 		}
 		default:
 			printf("Invalid token (type %d) for evaluation\n", expr->type);

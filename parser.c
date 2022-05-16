@@ -53,6 +53,8 @@ static void printTreeHelper(Value *tree) {
 	else if (tree->type != CONS_TYPE) {
 		switch (tree->type) {
 		case STR_TYPE:
+			printf("\"%s\"", tree->s);
+			break;
 		case BOOL_TYPE:
 		case SYMBOL_TYPE:
 			printf("%s", tree->s);
