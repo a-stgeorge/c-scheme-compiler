@@ -777,6 +777,34 @@ Value *evalLoad(Value *args, Frame *frame) { // (load ...) extension option
 	return returnVal;
 }
 
+Value *evalCond(Value *args, Frame *frame) {
+	
+	Value *cur = args;
+	Value *test;
+	while (!isNull(cur)) {
+		if (length(car(cur)) != 2) {
+			printf("Length of condition in cond must be 2!\n");
+			texit(1);
+		}
+		
+		test = car(car(cur));
+		if (test->type == SYMBOL_TYPE && !strcmp(test->s, "else")) {
+			return eval(car(cdr(car(cur))), frame);
+		}
+
+		test = eval(test, frame);
+		if (test->type != BOOL_TYPE || strcmp(test->s, "#f")) {
+			return eval(car(cdr(car(cur))), frame);
+		}
+
+		cur = cdr(cur);
+	}
+
+	Value *retVal = makeNull();
+	retVal->type = VOID_TYPE;
+	return retVal;
+
+}
 
 
 // ========== APPLY FUNCTION ==========
@@ -904,6 +932,10 @@ Value *eval(Value *expr, Frame *frame) {
 			else if (!strcmp(first->s, "set!")) {
                 return evalSet(args, frame);
             }
+
+			else if (!strcmp(first->s, "cond")) {
+				return evalCond(args, frame);
+			}
 
 			// ... further special forms here ...
 
