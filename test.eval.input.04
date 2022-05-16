@@ -98,3 +98,6 @@ x
 
 (define arguments (quote (1 2 3)))
 (apply + arguments)
+
+(apply + -1 2 -3 (quote (10 20)))
+(apply append (quote (1 2 3)) (quote (a b)) (quote (c d e)) (quote (f g)))
