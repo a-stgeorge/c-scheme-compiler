@@ -65,7 +65,7 @@ static Value *parseNumber(char nextChar) {
     } else{
         val->i = tempNum;
     } if (!isTokenEnder(nextChar)) {
-        printf("Error, not a number");
+        printf("Error, not a number\n");
         texit(1);
     }
     ungetc(nextChar, stdin);

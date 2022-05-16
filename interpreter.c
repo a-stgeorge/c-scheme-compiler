@@ -101,8 +101,6 @@ Value *primitiveMultiply(Value *args) {
 Value *primitiveSubtract(Value *args) {
     double remainder = 0;
     bool hasDoubles = false;
-    // error checking on args, a list of inputs
-    // compute the result as a single value
     Value *cur = args;
 	if(length(cur) == 0) {
 		printf("- must take in at least one argument\n");
@@ -145,9 +143,8 @@ Value *primitiveSubtract(Value *args) {
 
 Value *primitiveDivide(Value *args) {
     double quotient = 1;
-    // error checking on args, a list of inputs
-    //compute the result as a single value
     Value *cur = args;
+	bool isDouble = false;
 	if (length(cur) == 0) {
 		printf("/ must be given at least 1 argument\n");
 		texit(1);
@@ -156,6 +153,7 @@ Value *primitiveDivide(Value *args) {
         if (car(cur)->type == INT_TYPE) {
             quotient = car(cur)->i;
         } else if (car(cur)->type == DOUBLE_TYPE) {
+			isDouble = true;
             quotient = car(cur)->d;
         } else {
             printf("/ can only take in numbers\n");
@@ -166,6 +164,9 @@ Value *primitiveDivide(Value *args) {
     while (!isNull(cur)) {
         if (car(cur)->type == INT_TYPE) {
 			if(car(cur)->i != 0) {
+				if ((int) quotient % (int) car(cur)->i != 0) {
+					isDouble = true;
+				}
             	quotient /= car(cur)->i;
 			}
 			else {
@@ -173,6 +174,7 @@ Value *primitiveDivide(Value *args) {
 				texit(1);
 			}
         } else if (car(cur)->type == DOUBLE_TYPE) {
+			isDouble = true;
 			if(car(cur)->d != 0) {
             	quotient /= car(cur)->d;
 			}
@@ -187,8 +189,13 @@ Value *primitiveDivide(Value *args) {
         cur = cdr(cur);
     }
     Value *returnValue = makeNull();
-    returnValue->type = DOUBLE_TYPE;
-    returnValue->d = quotient;
+	if (isDouble) {
+    	returnValue->type = DOUBLE_TYPE;
+    	returnValue->d = quotient;
+	} else {
+		returnValue->type = INT_TYPE;
+		returnValue->i = (int) quotient;
+	}
     return returnValue;
 }
 
@@ -375,11 +382,15 @@ Value *libraryNEqual (Value* args) {
 		printf("= must have exactly 2 arguments\n");
 		texit(1);
 	}
-	if((car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) || (car(cdr(args))->type != INT_TYPE && car(cdr(args))->type != DOUBLE_TYPE)) {
+	if((car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) 
+				|| (car(cdr(args))->type != INT_TYPE && car(cdr(args))->type != DOUBLE_TYPE)) {
 		printf("Invalid arguments, = handles numeric comparisons only\n");
 		texit(1);
 	}
 	
+	Value *val1 = car(args);
+	Value *val2 = car(cdr(args));
+/*
 	double arg1 = 0;
 	double arg2 = 0;
 	if(car(args)->type == DOUBLE_TYPE) {
@@ -394,10 +405,11 @@ Value *libraryNEqual (Value* args) {
 	else {
 		arg2 = car(cdr(args))->i;
 	}
-	
+	*/
 	Value *returnValue = makeNull();
 	returnValue->type = BOOL_TYPE;
-	if(arg1 == arg2) {
+//	if(arg1 == arg2) {
+	if (equalValues(val1, val2)) {
 		returnValue->s = "#t";
 	}
 	else {
@@ -414,10 +426,27 @@ Value *libraryEqual(Value *args) {
 	
 	Value *arg1 = car(args);
 	Value *arg2 = car(cdr(args));
+	printf("1: ");
+	display(arg1);
+	printf("2: ");
+	display(arg2);
 	
+/*	Value *returnValue = makeNull();
+	returnValue->type = BOOL_TYPE;
+	returnValue->s = "#t";*/
+
 	Value *returnValue = makeNull();
 	returnValue->type = BOOL_TYPE;
-	returnValue->s = "#t";
+//	if(arg1 == arg2) {
+	if (equalValues(arg1, arg2)) {
+		returnValue->s = "#t";
+	}
+	else {
+		returnValue->s = "#f";
+	}
+	return returnValue;
+
+	/*
 	
 	if(arg1->type == CONS_TYPE && arg2->type == CONS_TYPE) {
 		if(length(arg1) != length(arg2)) {
@@ -444,7 +473,7 @@ Value *libraryEqual(Value *args) {
 			returnValue->s = "#t";
 		}
 	}
-	return returnValue;
+	return returnValue;*/
 }
 
 

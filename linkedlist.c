@@ -100,9 +100,10 @@ int length(Value *value) {
 	else if (value->type != CONS_TYPE) {
 		return 1;
 	}
-	for(size = 0; !isNull(value); size++) {
-		assert(value->type == CONS_TYPE);
-		value = value->c.cdr;
+	Value *cur = value;
+	for(size = 0; !isNull(cur); size++) {
+		assert(cur->type == CONS_TYPE);
+		cur = cur->c.cdr;
 	}
 	return size;
 }
