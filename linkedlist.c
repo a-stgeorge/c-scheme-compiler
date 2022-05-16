@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "linkedlist.h"
 #include "talloc.h"
 
@@ -123,7 +124,7 @@ bool equalValues(Value *val1, Value *val2) {
 	case STR_TYPE:
 	case BOOL_TYPE:
 	case SYMBOL_TYPE:
-		return val1->s == val2->s;
+		return !strcmp(val1->s, val2->s);
 	case OPEN_TYPE:
 	case CLOSE_TYPE:
 	case NULL_TYPE:

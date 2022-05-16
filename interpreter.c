@@ -387,10 +387,7 @@ Value *libraryNEqual (Value* args) {
 		printf("Invalid arguments, = handles numeric comparisons only\n");
 		texit(1);
 	}
-	
-	Value *val1 = car(args);
-	Value *val2 = car(cdr(args));
-/*
+
 	double arg1 = 0;
 	double arg2 = 0;
 	if(car(args)->type == DOUBLE_TYPE) {
@@ -405,11 +402,10 @@ Value *libraryNEqual (Value* args) {
 	else {
 		arg2 = car(cdr(args))->i;
 	}
-	*/
+	
 	Value *returnValue = makeNull();
 	returnValue->type = BOOL_TYPE;
-//	if(arg1 == arg2) {
-	if (equalValues(val1, val2)) {
+	if(arg1 == arg2) {
 		returnValue->s = "#t";
 	}
 	else {
@@ -426,18 +422,9 @@ Value *libraryEqual(Value *args) {
 	
 	Value *arg1 = car(args);
 	Value *arg2 = car(cdr(args));
-	printf("1: ");
-	display(arg1);
-	printf("2: ");
-	display(arg2);
 	
-/*	Value *returnValue = makeNull();
-	returnValue->type = BOOL_TYPE;
-	returnValue->s = "#t";*/
-
 	Value *returnValue = makeNull();
 	returnValue->type = BOOL_TYPE;
-//	if(arg1 == arg2) {
 	if (equalValues(arg1, arg2)) {
 		returnValue->s = "#t";
 	}
@@ -446,34 +433,6 @@ Value *libraryEqual(Value *args) {
 	}
 	return returnValue;
 
-	/*
-	
-	if(arg1->type == CONS_TYPE && arg2->type == CONS_TYPE) {
-		if(length(arg1) != length(arg2)) {
-			returnValue->s = "#f";
-		}
-		Value *cur1 = arg1;
-		Value *cur2 = arg2;
-		while(cur1) {
-			Value *result = libraryEqual(cons(cur1, cur2));
-			if(!strcmp("#f", result->s)) {
-				returnValue->s = "#f";
-				return returnValue;
-			}
-			cur1 = cdr(cur1);
-			cur2 = cdr(cur2);
-		}
-		returnValue->s = "#t";
-		return returnValue;
-	} else if(arg1->type == CONS_TYPE || arg2->type == CONS_TYPE) {
-		returnValue->s = "#f";
-	}
-	else {
-		if(equalValues(arg1, arg2)) {
-			returnValue->s = "#t";
-		}
-	}
-	return returnValue;*/
 }
 
 
