@@ -57,9 +57,6 @@
 (append (quote (1)) (quote (2)))
 (append x y)
 (append x 3)
-(append x)
-(append x x x)
-(append)
-(append "hello" x)
+;(append "hello" x)
 
 

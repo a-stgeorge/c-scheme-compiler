@@ -8,17 +8,9 @@
   (lambda args
     args))
 
-(define append-help		;; Helper function for append
-  (lambda (lst1 lst2)
-    (if (null? lst1)
-        lst2
-        (cons (car lst1)
-              (append-help (cdr lst1)
-                        lst2)))))
-
 (define append
-  (lambda lsts
-    (if (null? lsts)
-        (quote ())
-        (append-help (car lsts)
-                  (apply append (cdr lsts))))))
+  (lambda (l1 l2)
+    (if (null? l1)
+        l2
+        (cons (car l1) (append (cdr l1) l2)))))
+

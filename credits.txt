@@ -18,3 +18,8 @@ We got some help from Dr. Yang.
 
 proj7
 We got some help from Dr. Yang. (Thank you!)
+
+proj8
+We got some help from Dr. Yang and various online documentation explaining how scheme functions are supposed to work.
+
+

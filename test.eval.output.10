@@ -1,0 +1,40 @@
+"Tests of equal?"
+#t
+#t
+#f
+#t
+#f
+#t
+#f
+#f
+"Tests of ="
+#t
+#t
+#t
+#t
+#t
+#f
+#t
+#f
+#f
+#f
+"Tests of modulo"
+0
+2
+678
+"Tests of zero?"
+#t
+#t
+#f
+#t
+"Tests of list"
+(1 2 3 4)
+(1 2 3 (4 5))
+(1)
+()
+(())
+(2 ())
+"Tests of append"
+(1 2)
+(1 2 3 2 3 (3 5))
+(1 2 3 . 3)
