@@ -101,8 +101,6 @@ Value *primitiveMultiply(Value *args) {
 Value *primitiveSubtract(Value *args) {
     double remainder = 0;
     bool hasDoubles = false;
-    // error checking on args, a list of inputs
-    // compute the result as a single value
     Value *cur = args;
 	if(length(cur) == 0) {
 		printf("- must take in at least one argument\n");
@@ -145,9 +143,8 @@ Value *primitiveSubtract(Value *args) {
 
 Value *primitiveDivide(Value *args) {
     double quotient = 1;
-    // error checking on args, a list of inputs
-    //compute the result as a single value
     Value *cur = args;
+	bool isDouble = false;
 	if (length(cur) == 0) {
 		printf("/ must be given at least 1 argument\n");
 		texit(1);
@@ -156,6 +153,7 @@ Value *primitiveDivide(Value *args) {
         if (car(cur)->type == INT_TYPE) {
             quotient = car(cur)->i;
         } else if (car(cur)->type == DOUBLE_TYPE) {
+			isDouble = true;
             quotient = car(cur)->d;
         } else {
             printf("/ can only take in numbers\n");
@@ -166,6 +164,9 @@ Value *primitiveDivide(Value *args) {
     while (!isNull(cur)) {
         if (car(cur)->type == INT_TYPE) {
 			if(car(cur)->i != 0) {
+				if ((int) quotient % (int) car(cur)->i != 0) {
+					isDouble = true;
+				}
             	quotient /= car(cur)->i;
 			}
 			else {
@@ -173,6 +174,7 @@ Value *primitiveDivide(Value *args) {
 				texit(1);
 			}
         } else if (car(cur)->type == DOUBLE_TYPE) {
+			isDouble = true;
 			if(car(cur)->d != 0) {
             	quotient /= car(cur)->d;
 			}
@@ -187,8 +189,13 @@ Value *primitiveDivide(Value *args) {
         cur = cdr(cur);
     }
     Value *returnValue = makeNull();
-    returnValue->type = DOUBLE_TYPE;
-    returnValue->d = quotient;
+	if (isDouble) {
+    	returnValue->type = DOUBLE_TYPE;
+    	returnValue->d = quotient;
+	} else {
+		returnValue->type = INT_TYPE;
+		returnValue->i = (int) quotient;
+	}
     return returnValue;
 }
 
@@ -402,9 +409,9 @@ Value *libraryNEqual (Value* args) {
 	}
 	
 	Value *cur = args;
-	double prevArg;
-	double curArg;
-	
+	double prevArg, curArg;
+
+	// set prevArg
 	if(car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) {
 		printf("Invalid arguments, = handles numeric comparisons only\n");
 		texit(1);
@@ -417,6 +424,7 @@ Value *libraryNEqual (Value* args) {
 	}
 	cur = cdr(cur);
 	
+	// Set curArg and compare to prevArg
 	while(!isNull(cur)) {
 		if(car(cur)->type != INT_TYPE && car(cur)->type != DOUBLE_TYPE) {
 			printf("Invalid arguments, = handles numeric comparisons only\n");
@@ -450,40 +458,20 @@ Value *libraryEqual(Value *args) {
 	
 	Value *returnValue = makeNull();
 	returnValue->type = BOOL_TYPE;
-	returnValue->s = "#t";
-	
-	if(arg1->type == CONS_TYPE && arg2->type == CONS_TYPE) {
-		if(length(arg1) != length(arg2)) {
-			returnValue->s = "#f";
-		}
-		Value *cur1 = arg1;
-		Value *cur2 = arg2;
-		while(cur1) {
-			Value *result = libraryEqual(cons(cur1, cur2));
-			if(!strcmp("#f", result->s)) {
-				returnValue->s = "#f";
-				return returnValue;
-			}
-			cur1 = cdr(cur1);
-			cur2 = cdr(cur2);
-		}
+	if (equalValues(arg1, arg2)) {
 		returnValue->s = "#t";
-		return returnValue;
-	} else if(arg1->type == CONS_TYPE || arg2->type == CONS_TYPE) {
-		returnValue->s = "#f";
 	}
 	else {
-		if(equalValues(arg1, arg2)) {
-			returnValue->s = "#t";
-		}
+		returnValue->s = "#f";
 	}
 	return returnValue;
+
 }
 
 
-// ========== MAIN INTERPRET FUNCITON ==========
+// ========== MAIN INTERPRET FUNCITONS ==========
 
-void interpret(Value *tree) {
+void *interpret(Value *tree) {
 	Frame *parentFrame = talloc(sizeof(Frame));
 	parentFrame->bindings = makeNull();
 	parentFrame->parent = NULL;
@@ -510,6 +498,20 @@ void interpret(Value *tree) {
 		}
 		tree = cdr(tree);
 	}
+
+	return parentFrame;
+}
+
+void *interpretUseFrame(Value *tree, Frame *parentFrame) { 	// interpret function for (load ...)
+	while(!isNull(tree)) {									// so no need to set up parent frame
+		Value *result = eval(car(tree), parentFrame);
+		if (result->type != VOID_TYPE) {
+			printTree(result);
+		}
+		tree = cdr(tree);
+	}
+
+	return parentFrame;
 }
 
 
@@ -589,8 +591,8 @@ Value *evalQuote(Value *args) {
 	return car(args);
 }
 
-Value *evalLet(Value *args, Frame *frame, int type) { // type == 0 let, type == 1 letrec type == 2 let*
-	Frame *newFrame = talloc(sizeof(Frame));
+Value *evalLet(Value *args, Frame *frame, int type) { 	// type == 0: let, type == 1: letrec,	
+	Frame *newFrame = talloc(sizeof(Frame));			// and type == 2: let*
 	newFrame->bindings = makeNull();
 	newFrame->parent = frame;
 
@@ -774,6 +776,54 @@ Value *evalOr(Value *args, Frame *frame) {
 	return result;
 }
 
+Value *evalLoad(Value *args, Frame *frame) { // (load ...) extension option
+	if (length(args) != 1 || car(args)->type != STR_TYPE) {
+		printf("load must have exactly one string argument\n");
+		texit(1);
+	}
+	
+	FILE* fileStream = fopen(car(args)->s, "r");
+	if (fileStream == NULL) {
+		printf("Cannot open file %s\n", car(args)->s);
+		texit(0);
+	}
+	Value *list = tokenize(fileStream);
+	Value *tree = parse(list);
+	interpretUseFrame(tree, frame);		
+
+	Value *returnVal = makeNull();
+	returnVal->type = VOID_TYPE;
+	return returnVal;
+}
+
+Value *evalCond(Value *args, Frame *frame) {
+	
+	Value *cur = args;
+	Value *test;
+	while (!isNull(cur)) {
+		if (length(car(cur)) != 2) {
+			printf("Length of condition in cond must be 2!\n");
+			texit(1);
+		}
+		
+		test = car(car(cur));
+		if (test->type == SYMBOL_TYPE && !strcmp(test->s, "else")) {
+			return eval(car(cdr(car(cur))), frame);
+		}
+
+		test = eval(test, frame);
+		if (test->type != BOOL_TYPE || strcmp(test->s, "#f")) {
+			return eval(car(cdr(car(cur))), frame);
+		}
+
+		cur = cdr(cur);
+	}
+
+	Value *retVal = makeNull();
+	retVal->type = VOID_TYPE;
+	return retVal;
+
+}
 
 
 // ========== APPLY FUNCTION ==========
@@ -886,17 +936,25 @@ Value *eval(Value *expr, Frame *frame) {
 				return evalBegin(args, frame);
 			}
 			
-			else if(!strcmp(first->s, "and")) {
+			else if (!strcmp(first->s, "and")) {
 				return evalAnd(args, frame);
 			}
 			
-			else if(!strcmp(first->s, "or")) {
+			else if (!strcmp(first->s, "or")) {
 				return evalOr(args, frame);
 			}
 
+			else if (!strcmp(first->s, "load")) {
+				return evalLoad(args, frame);
+			}
+			
 			else if (!strcmp(first->s, "set!")) {
                 return evalSet(args, frame);
             }
+
+			else if (!strcmp(first->s, "cond")) {
+				return evalCond(args, frame);
+			}
 
 			// ... further special forms here ...
 
@@ -913,7 +971,6 @@ Value *eval(Value *expr, Frame *frame) {
 
 			}
 
-			return NULL;  // to make the compiler happy
 		}
 		default:
 			printf("Invalid token (type %d) for evaluation\n", expr->type);

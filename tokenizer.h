@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "value.h"
 #include "linkedlist.h"
 #include "talloc.h"
@@ -8,7 +9,7 @@
 /*
  * Reads in code and creates a linked list of tokens based on their type.
  */
-Value *tokenize();
+Value *tokenize(FILE *stream);
 
 /*
  * Takes in a linked list of tokens as input and displays them with one token

@@ -76,7 +76,8 @@ x
 (eq? 3 5)
 (eq? 3 3)
 (eq? (quote ()) (quote ())) ;It is understood that this is different than the result in DrRacket,
-;but this is related to how we handle the storage of empty lists
+							;but this is related to how we handle the storage of empty lists. R5RS
+							;standard says this result is unspecified; up to implementation.
 (eq? x x)
 ;(eq?)
 ;(eq? 1)
@@ -96,6 +97,7 @@ x
 (= 1 1 1 1 1)
 (= 5 5)
 
+"Tests of apply"
 (define arguments (quote (1 2 3)))
 (apply + arguments)
 

@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 
 #include "tokenizer.h"
@@ -38,47 +37,47 @@ static char *catStrChar(char *string, char c) {
 }
 
 // PARSE NUMBERS
-static Value *parseNumber(char nextChar) {
+static Value *parseNumber(FILE *stream, char nextChar) {
 	Value *val = makeNull();
 	double tempNum = nextChar - '0';
     val->type = INT_TYPE;
 
-    nextChar = fgetc(stdin);
+    nextChar = fgetc(stream);
     while (isDigit(nextChar)) {
         tempNum *= 10;
         tempNum += (nextChar - '0');
-        nextChar = fgetc(stdin);
+        nextChar = fgetc(stream);
     }
 
     if (nextChar == '.') {
         val->type = DOUBLE_TYPE;
-        nextChar = fgetc(stdin);
+        nextChar = fgetc(stream);
 
     	double dec = 1;
         while (isDigit(nextChar)) {
             dec /= 10;
             tempNum += (nextChar - '0')*dec;
-            nextChar = fgetc(stdin);
+            nextChar = fgetc(stream);
         }
 
         val->d = tempNum;
     } else{
         val->i = tempNum;
     } if (!isTokenEnder(nextChar)) {
-        printf("Error, not a number");
+        printf("Error, not a number\n");
         texit(1);
     }
-    ungetc(nextChar, stdin);
+    ungetc(nextChar, stream);
 
 	return val;
 }
 
 // PARSE BOOLEANS
-static Value *parseBoolean() {
+static Value *parseBoolean(FILE *stream) {
 	Value *val = makeNull();
 	val->type = BOOL_TYPE;
 
-	char charRead = fgetc(stdin);
+	char charRead = fgetc(stream);
 	if (charRead == 't') {
 		val->s = "#t";
 	} else if (charRead == 'f') {
@@ -88,49 +87,49 @@ static Value *parseBoolean() {
 		texit(1);
 	}
 		
-	charRead = fgetc(stdin);
+	charRead = fgetc(stream);
 	if (!isTokenEnder(charRead)) {
 		printf("Error, %s%c not a bool type", val->s, charRead);
 		texit(1);
 	}
-	ungetc(charRead, stdin);
+	ungetc(charRead, stream);
 
 	return val;
 }
 
 // PARSE SYMBOLS
-static Value *parseSymbol(char charRead) {
+static Value *parseSymbol(FILE *stream, char charRead) {
 	Value *val = makeNull();
 	val->type = SYMBOL_TYPE;
 	char *charString = charToStr(charRead);
-	charRead = fgetc(stdin);
+	charRead = fgetc(stream);
 	while (isSymbolCharacter(charRead)) {
 		charString = catStrChar(charString, charRead);
-		charRead = fgetc(stdin);
+		charRead = fgetc(stream);
 	}
 
 	if (!isTokenEnder(charRead)) {
 		printf("Error, %c is not a valid symbol character\n", charRead);
 		texit(1);
     }
-	ungetc(charRead, stdin);
+	ungetc(charRead, stream);
 	val->s = charString;
 
 	return val;
 }
 
 // PARSE STRINGS
-static Value *parseString(char charRead) {
+static Value *parseString(FILE *stream, char charRead) {
 	Value *val = makeNull();
 	val->type = STR_TYPE;
 	char *charString = charToStr(charRead);
-	charRead = fgetc(stdin);
+	charRead = fgetc(stream);
 	while(charRead != '\"') {
 		if (charRead == EOF) {
 			printf("Error, unterminated string");
 			texit(1);
 		} else if (charRead == '\\') {
-			charRead = fgetc(stdin);
+			charRead = fgetc(stream);
 			switch (charRead) {
 				case 'n':
 					charRead = '\n';
@@ -148,11 +147,10 @@ static Value *parseString(char charRead) {
 			}
 		}
 		charString = catStrChar(charString, charRead);
-		charRead = fgetc(stdin);
+		charRead = fgetc(stream);
 	}
-	charString = catStrChar(charString, charRead);
 
-	val->s = charString;
+	val->s = ++charString; // eliminate starting "
 	return val;
 }
 
@@ -160,11 +158,11 @@ static Value *parseString(char charRead) {
  * MAIN TOKENIZE FUNCTION 
  * Reads in code and creates a linked list of tokens based on their type.
  */
-Value *tokenize() {	
+Value *tokenize(FILE *stream) {	
 	char charRead;
 	Value *list = makeNull();
 
-	charRead = fgetc(stdin);
+	charRead = fgetc(stream);
 	while (charRead != EOF) {
 		if (charRead == '(') { // Open Type
 			Value *val = makeNull();
@@ -177,30 +175,30 @@ Value *tokenize() {
 			val->s = ")";
 			list = cons(val, list);	
 		} else if (charRead == '#') { // Boolean Type
-			Value *val = parseBoolean();		
+			Value *val = parseBoolean(stream);		
 			list = cons(val, list);	
 		} else if (charRead == '+' || charRead == '-') { // +/- Special Case
 			Value *val;
 			char sign = charRead;
 
-			charRead = fgetc(stdin);
+			charRead = fgetc(stream);
 			if (isTokenEnder(charRead)) {
 				val = makeNull();
 				val->type = SYMBOL_TYPE;
 				val->s = charToStr(sign);
-				ungetc(charRead, stdin);
+				ungetc(charRead, stream);
 			} else {
 				if (charRead == '.') {
-					charRead = fgetc(stdin);
+					charRead = fgetc(stream);
 					if (isTokenEnder(charRead)) {
                 		printf("Error, %c. is not a valid token", sign);
                 		texit(1);
             		}
-        	    	ungetc(charRead, stdin);
-    	        	ungetc('.', stdin);
+        	    	ungetc(charRead, stream);
+    	        	ungetc('.', stream);
 	            	charRead = '0';
 				}
-				val = parseNumber(charRead);
+				val = parseNumber(stream, charRead);
 				if (sign == '-' && val->type == INT_TYPE) {
 					val->i *= -1;
 				} else if (sign == '-') {
@@ -210,37 +208,37 @@ Value *tokenize() {
 			
 			list = cons(val, list);
 		} else if (charRead == '.') { // . Special Case
-			charRead = fgetc(stdin);
+			charRead = fgetc(stream);
 			if (isTokenEnder(charRead)) {
 				printf("Error, . is not a valid token");
 				texit(1);
 			}
-			ungetc(charRead, stdin);
-			ungetc('.', stdin);
-			Value *val = parseNumber('0');
+			ungetc(charRead, stream);
+			ungetc('.', stream);
+			Value *val = parseNumber(stream, '0');
 			list = cons(val, list);
 		} else if (isDigit(charRead)) { // Number Types
-			Value *val = parseNumber(charRead);
+			Value *val = parseNumber(stream, charRead);
 			list = cons(val, list);
 		} else if (isSymbolCharacter(charRead) || charRead == '\'') { // Symbol Type
-			Value *val = parseSymbol(charRead);
+			Value *val = parseSymbol(stream, charRead);
 			list = cons(val, list);
 		} else if (charRead == '\"') { // String Type
-			Value *val = parseString(charRead);
+			Value *val = parseString(stream, charRead);
 			list = cons(val, list);
 		} else if (charRead == ';') { // Comments
-			charRead = fgetc(stdin);
+			charRead = fgetc(stream);
 			while (charRead != '\n' && charRead != EOF) {
-				charRead = fgetc(stdin);
+				charRead = fgetc(stream);
 			}
-			ungetc(charRead, stdin);
+			ungetc(charRead, stream);
 		} else if (isTokenEnder(charRead)) {
 			// No action needed, whitespace
 		} else {
 			printf("Error, %c is not a valid character to start a token\n", charRead);
 			texit(1);
 		}
-		charRead = fgetc(stdin);
+		charRead = fgetc(stream);
 	}
 
 	return reverse(list);

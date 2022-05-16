@@ -4,8 +4,10 @@
 #include "parser.h"
 #include "interpreter.h"
 
+#include <stdio.h>
+
 int main(void) {
-    Value *list = tokenize();
+    Value *list = tokenize(stdin);
     Value *tree = parse(list);
     interpret(tree);
     tfree();
