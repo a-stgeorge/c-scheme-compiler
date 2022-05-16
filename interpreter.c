@@ -366,15 +366,34 @@ Value *primitiveIsPair(Value *args) {
 Value *apply(Value *function, Value *args);
 
 Value *primitiveApply(Value *args) {
-	if(length(args) >= 2) {
+	if(length(args) < 2) {
         printf("apply must have at least two arguments.\n");
         texit(1);
     }
-	if(car(cdr(args))->type != CONS_TYPE) {
+	Value *func = car(args);
+	args = cdr(args);
+	// Make a reversed list of the singular arguments
+	Value *newArgs = makeNull();
+    while(!isNull(cdr(args))) {
+        Value *arg = car(args);
+        newArgs = cons(arg, newArgs);
+        args = cdr(args);
+    }
+	// Add the values in the final list argument to the new list
+	if((car(args))->type == CONS_TYPE) {
+		args = car(args);
+	    while(!isNull(args)) {
+	        Value *arg = car(args);
+	        newArgs = cons(arg, newArgs);
+	        args = cdr(args);
+	    }
+	}
+	else {
 		printf("The last argument of apply must be a list.\n");
 		texit(1);
 	}
-	return apply(car(args), car(cdr(args)));
+	newArgs = reverse(newArgs);
+	return apply(func, newArgs);
 }
 
 Value *libraryNEqual (Value* args) {

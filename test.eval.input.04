@@ -102,4 +102,5 @@ x
 (apply + arguments)
 
 (apply + -1 2 -3 (quote (10 20)))
-(apply append (quote (1 2 3)) (quote (a b)) (quote (c d e)) (quote (f g)))
+;The following line rightfully runs into an error for too many arguments passed into append
+;(apply append (quote (1 2 3)) (quote (a b)) (quote (c d e)) (quote (f g)))
