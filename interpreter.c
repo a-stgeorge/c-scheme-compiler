@@ -389,6 +389,47 @@ Value *libraryNEqual (Value* args) {
 	return returnValue;
 }
 
+Value *libraryEqual(Value *args) {
+	if(length(args) != 2) {
+		printf("equal? must have exactly 2 arguments\n");
+		texit(1);
+	}
+	
+	Value *arg1 = car(args);
+	Value *arg2 = car(cdr(args));
+	
+	Value *returnValue = makeNull();
+	returnValue->type = BOOL_TYPE;
+	returnValue->s = "#t";
+	
+	if(arg1->type == CONS_TYPE && arg2->type == CONS_TYPE) {
+		if(length(arg1) != length(arg2)) {
+			returnValue->s = "#f";
+		}
+		Value *cur1 = arg1;
+		Value *cur2 = arg2;
+		while(cur1) {
+			Value *result = libraryEqual(cons(cur1, cur2));
+			if(!strcmp("#f", result->s)) {
+				returnValue->s = "#f";
+				return returnValue;
+			}
+			cur1 = cdr(cur1);
+			cur2 = cdr(cur2);
+		}
+		returnValue->s = "#t";
+		return returnValue;
+	} else if(arg1->type == CONS_TYPE || arg2->type == CONS_TYPE) {
+		returnValue->s = "#f";
+	}
+	else {
+		if(equalValues(arg1, arg2)) {
+			returnValue->s = "#t";
+		}
+	}
+	return returnValue;
+}
+
 
 // ========== MAIN INTERPRET FUNCITON ==========
 
@@ -410,6 +451,7 @@ void interpret(Value *tree) {
 	bind("pair?", primitiveIsPair, parentFrame);
 	bind("apply", primitiveApply, parentFrame);
 	bind("=", libraryNEqual, parentFrame);
+	bind("equal?", libraryEqual, parentFrame);
 
 	while(!isNull(tree)) {
 		Value *result = eval(car(tree), parentFrame);
@@ -601,6 +643,61 @@ Value *evalBegin(Value *args, Frame *frame) {
 	return result;
 }
 
+Value *evalAnd(Value *args, Frame *frame) {
+	Value *cur = args;
+	Value *result = makeNull();
+	result->type = BOOL_TYPE;
+
+	if(cur->type != CONS_TYPE && cur->type != NULL_TYPE) {
+		printf("Invalid input parameters\n");
+		texit(1);
+	}
+	
+	if(cur->type == NULL_TYPE) {
+		result->s = "#t";
+		return result;
+	}
+	
+	while(cur->type == CONS_TYPE) {
+		Value *cond = eval(car(cur), frame);
+		if(cond->type == BOOL_TYPE && !strcmp(cond->s, "#f")) {
+			result->s = "#f";
+			return result;
+		}
+		cur = cdr(cur);
+	}
+	result->s = "#t";
+	return result;
+}
+
+Value *evalOr(Value *args, Frame *frame) {
+	Value *cur = args;
+	Value *result = makeNull();
+	result->type = BOOL_TYPE;
+
+	if(cur->type != CONS_TYPE && cur->type != NULL_TYPE) {
+		printf("Invalid input parameters\n");
+		texit(1);
+	}
+	
+	if(cur->type == NULL_TYPE) {
+		result->s = "#t";
+		return result;
+	}
+	
+	while(cur->type == CONS_TYPE) {
+		Value *cond = eval(car(cur), frame);
+		if(cond->type == BOOL_TYPE && !strcmp(cond->s, "#t")) {
+			result->s = "#t";
+			return result;
+		}
+		cur = cdr(cur);
+	}
+	result->s = "#f";
+	return result;
+}
+
+
 
 // ========== APPLY FUNCTION ==========
 
@@ -710,6 +807,14 @@ Value *eval(Value *expr, Frame *frame) {
 
 			else if (!strcmp(first->s, "begin")) {
 				return evalBegin(args, frame);
+			}
+			
+			else if(!strcmp(first->s, "and")) {
+				return evalAnd(args, frame);
+			}
+			
+			else if(!strcmp(first->s, "or")) {
+				return evalOr(args, frame);
 			}
 
 			// ... further special forms here ...
