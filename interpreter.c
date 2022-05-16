@@ -347,7 +347,7 @@ Value *primitiveIsPair(Value *args) {
 	}
 	Value *returnValue = makeNull();
 	returnValue->type = BOOL_TYPE;
-	if(length(car(args)) >= 2) {
+	if(car(args)->type == CONS_TYPE) {
 		returnValue->s = "#t";
 	}
 	else {
