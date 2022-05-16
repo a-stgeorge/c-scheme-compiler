@@ -480,6 +480,33 @@ Value *lookUpSymbol(Value *tree, Frame *frame) {
 	return lookUpSymbol(tree, frame->parent);
 }
 
+Value *evalSet(Value *args, Frame *frame) {
+    Value* returnValue = makeNull();
+    returnValue->type = VOID_TYPE;
+	if (length(args) != 2) {
+		printf("set! must have exactly 2 arguments\n");
+        texit(1);
+	}
+	Value *symb = car(args);
+	Value *newVal = eval(car(cdr(args)), frame);
+	Frame *curFrame = frame;
+	while(curFrame != NULL) {
+	    Value *binding = frame->bindings;
+	    while(!isNull(binding)) {
+	        if(!strcmp(car(car(binding))->s, symb->s)) {
+	            Value* oldVal = cdr(car(binding));
+				*oldVal = *newVal;
+				return returnValue;
+	        }
+	        binding = cdr(binding);
+	    }
+	    curFrame = curFrame->parent;
+	}
+    printf("Variable %s not found\n", symb->s);
+    texit(1);
+	return returnValue;
+}
+
 Value *evalIf(Value *args, Frame *frame) {
 	if (length(args) != 3 && length(args) != 2) {
 		printf("Invalid if statement, must have 2 or 3 arguments\n");
@@ -753,6 +780,10 @@ Value *eval(Value *expr, Frame *frame) {
 			else if (!strcmp(first->s, "begin")) {
 				return evalBegin(args, frame);
 			}
+
+			else if (!strcmp(first->s, "set!")) {
+                return evalSet(args, frame);
+            }
 
 			// ... further special forms here ...
 
