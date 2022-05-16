@@ -126,10 +126,17 @@ bool equalValues(Value *val1, Value *val2) {
 	case OPEN_TYPE:
 	case CLOSE_TYPE:
 	case NULL_TYPE:
+	case VOID_TYPE:
 		return true;
-	default:
-		// missing some implementations
-		return false;
+	case CLOSURE_TYPE:
+		return equalValues(val1->closure.args, val2->closure.args) 
+					&& equalValues(val1->closure.body, val2->closure.body)
+					&& val1->closure.frame == val2->closure.frame 
+					&& val1->closure.variadic == val2->closure.variadic;
+	case PRIMITIVE_TYPE:
+		return val1->pf == val2->pf;
+	case CONS_TYPE:
+		return equalValues(val1->c.car, val2->c.car) && equalValues(val1->c.cdr, val2->c.cdr);
 	}
 }
 
