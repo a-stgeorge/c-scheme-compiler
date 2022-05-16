@@ -524,7 +524,7 @@ Value *evalSet(Value *args, Frame *frame) {
 	Value *newVal = eval(car(cdr(args)), frame);
 	Frame *curFrame = frame;
 	while(curFrame != NULL) {
-	    Value *binding = frame->bindings;
+	    Value *binding = curFrame->bindings;
 	    while(!isNull(binding)) {
 	        if(!strcmp(car(car(binding))->s, symb->s)) {
 	            Value* oldVal = cdr(car(binding));
@@ -577,7 +577,7 @@ Value *evalLet(Value *args, Frame *frame, int type) { 	// type == 0: let, type =
 	newFrame->bindings = makeNull();
 	newFrame->parent = frame;
 
-	if (length(args) != 2) {
+	if (length(args) < 2) {
 		printf("let must have exactly 2 arguments: a list of bindings and a body\n");
 		texit(1);
 	}
@@ -611,8 +611,15 @@ Value *evalLet(Value *args, Frame *frame, int type) { 	// type == 0: let, type =
 			newFrame->parent = frame;
 		}
 	}
+	
+	Value *cur = args;
+	Value *result = eval(car(cdr(args)), newFrame);
+	while (cdr(cur)->type == CONS_TYPE && result->type == VOID_TYPE) {
+		cur = cdr(cur);
+		result = eval(car(cdr(cur)), newFrame);
+	}
+	return result;
 
-	return eval(car(cdr(args)), newFrame);
 }
 
 Value *evalDefine(Value *args, Frame *frame) {
@@ -777,12 +784,11 @@ Value *evalLoad(Value *args, Frame *frame) { // (load ...) extension option
 	return returnVal;
 }
 
-Value *evalCond(Value *args, Frame *frame) {
-	
+Value *evalCond(Value *args, Frame *frame) {	
 	Value *cur = args;
 	Value *test;
 	while (!isNull(cur)) {
-		if (length(car(cur)) != 2) {
+		if (length(car(cur)) < 2) {
 			printf("Length of condition in cond must be 2!\n");
 			texit(1);
 		}

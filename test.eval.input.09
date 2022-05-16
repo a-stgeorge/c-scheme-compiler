@@ -1,0 +1,61 @@
+;; HW3 - Lazy Lists - Aidan St. George
+
+;; lazy-range: returns a lazy list starting with a and ending with b. given in problem assignment
+(define lazy-range
+  (lambda (a b)
+    (if (> a b)
+        '()
+        (cons a
+              (lambda () (lazy-range (+ a 1) b))))))
+
+
+;; lazy-infinite-range: Function returns an integer lazy list starting at value first
+(define lazy-infinite-range
+  (lambda (first)
+    (cons first (lambda () (lazy-infinite-range (+ first 1))))))
+
+
+;; first-n: returns the first n items of llst as a scheme list
+(define first-n
+  (lambda (llst n)
+    (if (or (equal? llst '())
+            (< n 1))
+        '()
+        (cons (car llst) (first-n ((cdr llst)) (- n 1))))))
+
+
+;; nth: returns n-th value of llst
+(define nth
+  (lambda (llst n)
+    (and (not (equal? llst '()))
+         (if (< n 2)
+             (car llst)
+             (nth ((cdr llst)) (- n 1))))))
+         
+
+;; lazy-add: adds two lists, llst1 and llst2, together component-wise
+(define lazy-add
+  (lambda (llst1 llst2)
+    (cond ((and (equal? llst1 '())
+                (equal? llst2 '()))
+           '())
+          ((equal? llst1 '())
+           (cons (car llst2) (lambda () (lazy-add '() ((cdr llst2))))))
+          ((equal? llst2 '())
+           (cons (car llst1) (lambda () (lazy-add ((cdr llst1)) '()))))
+          (else
+           (cons (+ (car llst1) (car llst2))
+                 (lambda () (lazy-add ((cdr llst1)) ((cdr llst2)))))))))
+
+
+;; lazy-filter: returns a lazy filtered version of llst according to the predicate
+(define lazy-filter
+  (lambda (predicate llst)
+    (if (equal? llst '())
+        '()
+        (if (predicate (car llst))
+            (cons (car llst) (lambda () (lazy-filter predicate ((cdr llst)))))
+            (lazy-filter predicate ((cdr llst)))))))
+    
+
+

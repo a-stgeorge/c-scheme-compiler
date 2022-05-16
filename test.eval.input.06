@@ -1,0 +1,63 @@
+;; Various tests
+;; These should all work
+
+"+, null?, car, cdr, and cons tests"
+(+ 4 5 6)
+(+ 4.5 2.4)
+(+ (+ 4.2 4) 4)
+(define x 1)
+(+ x -4 3 -2)
+(+)
+(+ 5)
+;(+ 3 "hello") ; invalid
+(null? #f)
+(null? #t)
+(null? 5)
+(null? +)
+;(null? if) ; invalid
+(car (quote (2 3 4 5)))
+(cdr (quote (2 3 4 5)))
+(cons (+ 1 3) 2)
+
+; Tests of car, cdr, and null?
+"car and cdr tests"
+(define val (quote ((1) 2 3 4)))
+(cdr val)
+(car val)
+(cdr (cdr (cdr (cdr val))))
+
+(define val2 (quote ((((2) 3) 4) 5)))
+(car val2)
+(car (car (car (car val2))))
+(cdr val2)
+(cdr (cons 1 3))
+;(car 5) ; invalid list
+;(cdr (quote 5)) ; invalid list
+
+"null? tests"
+(define x (quote ()))
+(null? 4)
+(null? (+ 2 3))
+(null? x)
+(null? (lambda () 2))
+(null? "hello")
+(null? "gfsa")
+(null? (quote (3 2)))
+(null? (quote ()))
+
+"cons tests"
+(cons 1 3)
+
+(define x (cons 1 2))
+(define y (cons 3 x))
+(define z (cons 4 y))
+(define a (cons x z))
+x
+y
+z
+a
+
+(cons a 3)
+(cons 3 a)
+
+;(cons 1 3 5)

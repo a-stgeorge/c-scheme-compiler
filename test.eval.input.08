@@ -33,12 +33,18 @@
        (random
         (lambda args
           (cond (#f 0)
-                ((null? args) 1)
-                ((null? (cdr args)) (/ x 3))
-                (else (set! x 8) (+ x x)))))
+                 ((null? args) 1)
+                 ((null? (cdr args)) (/ x 3))
+                 (else (set! x 8) (+ x x)))))
        (y x)
        (x 8))
   (+ (random) (random 1) (random 1 2) (random 1 2 3) x y))
 
 ; The following should return a void type
 (cond (#f 0))
+
+(cond (#f 3)
+	   (#f 4)
+	   (#f 5)
+	   ((= 3 3) 4)
+	   (else 4))

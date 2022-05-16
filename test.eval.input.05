@@ -1,0 +1,52 @@
+;; Simple composite tests
+
+
+;; test 1
+(define not
+  (lambda (bool)
+    (if bool #f #t)))
+    
+(define tofu
+  (lambda (cond conseq alt)
+    (let ((nconseq (not conseq))
+          (nalt (not alt)))
+      (if cond nconseq nalt))))
+    
+(tofu 23 #f #t)
+
+
+;; test 2
+(define not
+  (lambda (bool)
+	(if bool #f #t)))
+
+(define f
+  (lambda (x y z)
+	(let ((cond (not x)))
+	  (if cond y z))))
+
+
+(f #f 2 3)
+
+(f (not #f) 4 5)
+
+
+;; test 3
+(define print
+	(lambda (x) x))
+
+(print (quote (a b)))
+
+
+;; test 4
+;; These should fail but not crash
+
+;(define x)
+;(define 3 5)
+;(lambda (x x) x)
+
+; This input should be fine
+(define x (lambda () (quote (1 2 3))))
+(x)
+; But this should not
+((x))
