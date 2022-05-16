@@ -371,37 +371,51 @@ Value *primitiveApply(Value *args) {
 }
 
 Value *libraryNEqual (Value* args) {
-	if(length(args) != 2) {
-		printf("= must have exactly 2 arguments\n");
+	Value *returnValue = makeNull();
+	returnValue->type = BOOL_TYPE;
+	returnValue->s = "#t";
+	if(length(args) == 0) {
+		printf("= must have at least 1 argument\n");
 		texit(1);
 	}
-	if((car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) || (car(cdr(args))->type != INT_TYPE && car(cdr(args))->type != DOUBLE_TYPE)) {
+	else if(length(args) == 1) {
+		return returnValue;
+	}
+	
+	Value *cur = args;
+	double prevArg;
+	double curArg;
+	
+	if(car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) {
 		printf("Invalid arguments, = handles numeric comparisons only\n");
 		texit(1);
 	}
-	
-	double arg1 = 0;
-	double arg2 = 0;
 	if(car(args)->type == DOUBLE_TYPE) {
-		arg1 = car(args)->d;
+		prevArg = car(args)->d;
 	}
-	else {
-		arg1 = car(args)->i;
+	else if(car(args)->type == INT_TYPE) {
+		prevArg = car(args)->i;
 	}
-	if(car(cdr(args))->type == DOUBLE_TYPE) {
-		arg2 = car(cdr(args))->d;
-	}
-	else {
-		arg2 = car(cdr(args))->i;
-	}
+	cur = cdr(cur);
 	
-	Value *returnValue = makeNull();
-	returnValue->type = BOOL_TYPE;
-	if(arg1 == arg2) {
-		returnValue->s = "#t";
-	}
-	else {
-		returnValue->s = "#f";
+	while(!isNull(cur)) {
+		if(car(args)->type != INT_TYPE && car(args)->type != DOUBLE_TYPE) {
+			printf("Invalid arguments, = handles numeric comparisons only\n");
+			texit(1);
+		}
+		if(car(args)->type == DOUBLE_TYPE) {
+			curArg = car(args)->d;
+		}
+		else if(car(args)->type == INT_TYPE) {
+			curArg = car(args)->i;
+		}
+		
+		if(prevArg != curArg) {
+			returnValue->s = "#f";
+			return returnValue;
+		}
+		prevArg = curArg;
+		cur = cdr(cur);
 	}
 	return returnValue;
 }
